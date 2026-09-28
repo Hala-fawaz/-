@@ -27,11 +27,17 @@ export default function Home() {
         </div>
 
         <div className="nav-actions">
-          <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-            {LANGUAGES.map((item) => (
-              <option key={item.code} value={item.code}>{item.name}</option>
-            ))}
-          </select>
+         <select
+  value={language}
+  onChange={(e) => setLanguage(e.target.value)}
+  aria-label="اختيار اللغة"
+>
+  {LANGUAGES.map((lang) => (
+    <option key={lang.code} value={lang.code}>
+      {lang.name}
+    </option>
+  ))}
+</select>
           <button className="ghost">عن المشروع</button>
         </div>
       </header>
