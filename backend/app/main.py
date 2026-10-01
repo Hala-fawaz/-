@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from .translation import translate_text
 from .language_codes import LANGUAGE_CODES
@@ -8,8 +8,8 @@ app = FastAPI(title="Risalah AI API", version="0.1.0")
 
 class TranslationRequest(BaseModel):
     text: str
-    source_language: str = "arb_Arab"
-    target_language: str = "eng_Latn"
+    source_language: str = "ar"
+    target_language: str = "en"
 
 
 @app.get("/health")
@@ -19,14 +19,33 @@ def health():
 
 @app.post("/api/translate")
 def translate(request: TranslationRequest):
-    source_language = LANGUAGE_CODES.get(
-        request.source_language,
-        request.source_language
-    )
-    target_language = LANGUAGE_CODES.get(
-        request.target_language,
-        request.target_language
-    )
+    if not request.text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Text cannot be empty."
+        )
+
+    supported_nllb_codes = set(LANGUAGE_CODES.values())
+
+    if request.source_language in LANGUAGE_CODES:
+        source_language = LANGUAGE_CODES[request.source_language]
+    elif request.source_language in supported_nllb_codes:
+        source_language = request.source_language
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported source language: {request.source_language}"
+        )
+
+    if request.target_language in LANGUAGE_CODES:
+        target_language = LANGUAGE_CODES[request.target_language]
+    elif request.target_language in supported_nllb_codes:
+        target_language = request.target_language
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported target language: {request.target_language}"
+        )
 
     return translate_text(
         text=request.text,
