@@ -59,7 +59,7 @@ def search_fts(question: str, top_k: int = 30):
                 source,
                 page,
                 text,
-                snippet(knowledge_fts, 0, '[', ']', '...', 50) AS snippet,
+                snippet(knowledge_fts, 0, '[', ']', '...', 64) AS snippet,
                 bm25(knowledge_fts) AS bm25_score
             FROM knowledge_fts
             WHERE knowledge_fts MATCH ?

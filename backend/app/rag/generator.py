@@ -45,9 +45,50 @@ def _clean_answer(answer: str) -> str:
     return " ".join(unique).strip()
 
 
+def _extract_when_answer(question: str, sources: list[dict]):
+    if "\u0645\u062a\u0649" not in question:
+        return None
+
+    birth_pattern = re.compile(r"(?:\u0648\u0644\u062f|\u0645\u064a\u0644\u0627\u062f|\u0648\u0644\u0627\u062f)")
+    time_pattern = re.compile(r"(?:\u0639\u0627\u0645|\u0633\u0646\u0629|\u064a\u0648\u0645|\u0627\u0644\u0627\u062b\u0646\u064a\u0646|\u0631\u0628\u064a\u0639|\d{2,4}|[\u0660-\u0669]{2,4})")
+    picks = []
+
+    for source in sources[:3]:
+        text = (source.get("snippet") or source.get("text", "")).replace("[", "").replace("]", "")
+        for part in re.split(r"(?<=[.!?\u061f])\s+|\n+", text):
+            part = " ".join(part.split()).strip(" .")
+            if part and birth_pattern.search(part) and time_pattern.search(part):
+                picks.append(part)
+                break
+
+    unique = []
+    for part in picks:
+        if part not in unique:
+            unique.append(part)
+
+    if not unique:
+        return None
+
+    cleaned_unique = []
+    for part in unique:
+        part = re.split(
+            r"(?:\u0648\u0642\u062f\s+\u0631\u062c\u0651?\u062d|\u062b\u0645\s+\u0647\u0627\u062c\u0631|\u0648\u062a\u0648\u0641\u064a|\u0648\u0639\u0627\u0634|\u0648\u0628\u0642\u0649)",
+            part,
+            maxsplit=1,
+        )[0].strip(" ,.")
+
+        if part:
+            cleaned_unique.append(part)
+
+    return ". ".join(cleaned_unique[:1]) + "."
+
 def generate_answer(question: str, sources: list[dict]) -> str:
     if not sources:
         return "لا توجد معلومات كافية في المصادر المتاحة للإجابة عن هذا السؤال."
+
+    strict_answer = _extract_when_answer(question, sources)
+    if strict_answer:
+        return strict_answer
 
     context_parts = []
 
@@ -75,6 +116,13 @@ def generate_answer(question: str, sources: list[dict]) -> str:
 لا تخترع معلومات غير موجودة في النصوص.
 إذا لم تكفِ المعلومات، قل بوضوح إن المعلومات المتاحة لا تكفي.
 لا تصدر فتاوى أو أحكامًا شرعية شخصية.
+
+في الأسئلة الواقعية مثل: متى، أين، من، كم، التزم بالمعلومة الواردة نصًا في المصادر ولا تستنتج تاريخًا أو رقمًا من عندك.
+لا تذكر أي سنة أو رقم أو مدة زمنية إلا إذا وردت صراحة في النصوص المقدمة.
+إذا اختلفت المصادر في التاريخ أو الرقم، اذكر بوضوح أن هناك اختلافًا واعرض الأقوال الموجودة في النصوص دون ترجيح من عندك.
+إذا ورد في النص عام الفيل فلا تحوله إلى سنة ميلادية إلا إذا ذكرت السنة الميلادية صراحة في أحد النصوص.
+لا تقم بأي عملية حسابية أو تحويل زمني اعتمادًا على النصوص.
+إذا كان السؤال يطلب تاريخًا دقيقًا ولم تتفق النصوص عليه، اذكر أشهر قول موجود في المصادر ثم وضح وجود الخلاف.
 ابدأ مباشرة بالإجابة.
 """.strip()
 

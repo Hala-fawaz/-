@@ -24,8 +24,8 @@ def ask_guide(request: GuideRequest):
 
     sources = hybrid_retrieve(
         question,
-        top_k=10,
-        candidate_k=100,
+        top_k=2,
+        candidate_k=200,
     )
 
     answer = generate_answer(

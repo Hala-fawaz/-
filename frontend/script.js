@@ -148,7 +148,68 @@
     speechSynthesis.cancel();const u=new SpeechSynthesisUtterance($('#station-copy')?.textContent||'');u.lang=chosen()==='ar'?'ar-SA':chosen();u.rate=.92;speechSynthesis.speak(u);
   });
   $$('.suggested-questions [data-question]').forEach(button=>button.addEventListener('click',()=>{const input=$('#guide-question');if(input)input.value=button.dataset.question;}));
-  $('#guide-form')?.addEventListener('submit',e=>{e.preventDefault();const box=$('#guide-answer');if(box){box.textContent='هذه معاينة للواجهة فقط؛ لا يتصل المرشد حاليًا بذكاء اصطناعي أو بقاعدة مصادر.';box.classList.add('show');}});
+  $('#guide-form')?.addEventListener('submit', async e => {
+    e.preventDefault();
+
+    const input = $('#guide-question');
+    const box = $('#guide-answer');
+    const question = input?.value.trim();
+
+    if (!box || !question) return;
+
+    box.textContent = '\u062c\u0627\u0631\u064a \u0627\u0644\u0628\u062d\u062b \u0641\u064a \u0627\u0644\u0645\u0635\u0627\u062f\u0631 \u0627\u0644\u0645\u0648\u062b\u0642\u0629...';
+    box.classList.add('show');
+
+    try {
+      const apiBase = window.RISAALA_CONFIG?.apiBaseUrl || 'http://127.0.0.1:8000';
+
+      const response = await fetch(`${apiBase}/api/guide`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      box.textContent = '';
+
+      const answer = document.createElement('p');
+      answer.textContent = data.answer || '\u0644\u0645 \u064a\u062a\u0645 \u0627\u0644\u0639\u062b\u0648\u0631 \u0639\u0644\u0649 \u0625\u062c\u0627\u0628\u0629.';
+      box.appendChild(answer);
+
+      if (Array.isArray(data.sources) && data.sources.length) {
+        const title = document.createElement('strong');
+        title.textContent = '\u0627\u0644\u0645\u0635\u0627\u062f\u0631:';
+        box.appendChild(title);
+
+        const list = document.createElement('ul');
+
+        data.sources.slice(0, 5).forEach(source => {
+          const item = document.createElement('li');
+
+          const sourceName = (source.source || '\u0645\u0635\u062f\u0631 \u0645\u0648\u062b\u0642')
+            .split(/[\\/]/)
+            .pop()
+            .replace(/\.txt$/i, '');
+
+          item.textContent = source.page
+            ? `${sourceName} \u2014 \u0635\u0641\u062d\u0629 ${source.page}`
+            : sourceName;
+
+          list.appendChild(item);
+        });
+
+        box.appendChild(list);
+      }
+    } catch (error) {
+      console.error('Guide error:', error);
+      box.textContent = '\u062a\u0639\u0630\u0631 \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0628\u0627\u0644\u0645\u0631\u0634\u062f. \u062a\u0623\u0643\u062f\u064a \u0623\u0646 \u0627\u0644\u062e\u062f\u0645\u0629 \u0627\u0644\u062e\u0644\u0641\u064a\u0629 \u062a\u0639\u0645\u0644 \u062b\u0645 \u062d\u0627\u0648\u0644\u064a \u0645\u0631\u0629 \u0623\u062e\u0631\u0649.';
+    }
+  });
 
   $('#station-search-form')?.addEventListener('submit',e=>e.preventDefault());
   $('#station-search')?.addEventListener('input',e=>{

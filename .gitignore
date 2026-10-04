@@ -25,3 +25,4 @@ backend/knowledge/index/*.faiss
 
 # Frontend dependencies
 frontend/node_modules/
+backend/knowledge/index/chunks.json
