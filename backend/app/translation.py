@@ -37,3 +37,42 @@ def translate_text(text: str, source_language: str, target_language: str):
         "target_language": target_language,
         "model": MODEL_NAME,
     }
+
+
+def translate_texts(texts: list[str], source_language: str, target_language: str, batch_size: int = 8):
+    tokenizer, model = load_model()
+    tokenizer.src_lang = source_language
+
+    translations = []
+
+    for start in range(0, len(texts), batch_size):
+        batch = texts[start:start + batch_size]
+
+        encoded = tokenizer(
+            batch,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=512,
+        )
+
+        generated_tokens = model.generate(
+            **encoded,
+            forced_bos_token_id=tokenizer.convert_tokens_to_ids(target_language),
+            max_length=200,
+            num_beams=4,
+        )
+
+        translations.extend(
+            tokenizer.batch_decode(
+                generated_tokens,
+                skip_special_tokens=True,
+            )
+        )
+
+    return {
+        "translations": translations,
+        "source_language": source_language,
+        "target_language": target_language,
+        "model": MODEL_NAME,
+    }

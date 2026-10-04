@@ -2,7 +2,38 @@
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => [...root.querySelectorAll(s)];
   let languages = [
-    ['ar','العربية'],['en','English'],['fr','Français'],['es','Español'],['de','Deutsch'],['it','Italiano'],['pt','Português'],['ru','Русский'],['tr','Türkçe'],['ur','اردو'],['fa','فارسی'],['hi','हिन्दी'],['bn','বাংলা'],['id','Bahasa Indonesia'],['ms','Bahasa Melayu'],['zh-CN','中文（简体）'],['zh-TW','中文（繁體）'],['ja','日本語'],['ko','한국어'],['sw','Kiswahili'],['ha','Hausa'],['yo','Yorùbá'],['ig','Igbo'],['am','አማርኛ'],['af','Afrikaans'],['sq','Shqip'],['az','Azərbaycanca'],['eu','Euskara'],['be','Беларуская'],['bg','Български'],['bs','Bosanski'],['ca','Català'],['ceb','Cebuano'],['co','Corsu'],['hr','Hrvatski'],['cs','Čeština'],['da','Dansk'],['nl','Nederlands'],['eo','Esperanto'],['et','Eesti'],['fi','Suomi'],['fy','Frysk'],['gl','Galego'],['ka','ქართული'],['el','Ελληνικά'],['gu','ગુજરાતી'],['ht','Kreyòl Ayisyen'],['haw','ʻŌlelo Hawaiʻi'],['he','עברית'],['hu','Magyar'],['is','Íslenska'],['ga','Gaeilge'],['jv','Basa Jawa'],['kn','ಕನ್ನಡ'],['kk','Қазақша'],['km','ខ្មែរ'],['rw','Ikinyarwanda'],['ku','Kurdî'],['ky','Кыргызча'],['lo','ລາວ'],['la','Latina'],['lv','Latviešu'],['lt','Lietuvių'],['lb','Lëtzebuergesch'],['mk','Македонски'],['mg','Malagasy'],['ml','മലയാളം'],['mt','Malti'],['mi','Māori'],['mr','मराठी'],['mn','Монгол'],['my','မြန်မာ'],['ne','नेपाली'],['no','Norsk'],['ny','Chichewa'],['or','ଓଡ଼ିଆ'],['ps','پښتو'],['pl','Polski'],['pa','ਪੰਜਾਬੀ'],['ro','Română'],['sm','Gagana Samoa'],['gd','Gàidhlig'],['sr','Српски'],['st','Sesotho'],['sn','chiShona'],['sd','سنڌي'],['si','සිංහල'],['sk','Slovenčina'],['sl','Slovenščina'],['so','Soomaali'],['su','Basa Sunda'],['sv','Svenska'],['tg','Тоҷикӣ'],['ta','தமிழ்'],['tt','Tatarça'],['te','తెలుగు'],['th','ไทย'],['tk','Türkmençe'],['uk','Українська'],['ug','ئۇيغۇرچە'],['uz','Oʻzbekcha'],['vi','Tiếng Việt'],['cy','Cymraeg'],['xh','isiXhosa'],['yi','ייִדיש'],['zu','isiZulu']
+    ['ar','\u0627\u0644\u0639\u0631\u0628\u064a\u0629'],
+    ['en','English'],
+    ['fr','Fran\u00e7ais'],
+    ['es','Espa\u00f1ol'],
+    ['de','Deutsch'],
+    ['it','Italiano'],
+    ['pt','Portugu\u00eas'],
+    ['tr','T\u00fcrk\u00e7e'],
+    ['ur','\u0627\u0631\u062f\u0648'],
+    ['fa','\u0641\u0627\u0631\u0633\u06cc'],
+    ['id','Bahasa Indonesia'],
+    ['ms','Bahasa Melayu'],
+    ['bn','\u09ac\u09be\u0982\u09b2\u09be'],
+    ['hi','\u0939\u093f\u0928\u094d\u0926\u0940'],
+    ['ta','\u0ba4\u0bae\u0bbf\u0bb4\u0bcd'],
+    ['te','\u0c24\u0c46\u0c32\u0c41\u0c17\u0c41'],
+    ['ml','\u0d2e\u0d32\u0d2f\u0d3e\u0d33\u0d02'],
+    ['pa','\u0a2a\u0a70\u0a1c\u0a3e\u0a2c\u0a40'],
+    ['gu','\u0a97\u0ac1\u0a9c\u0ab0\u0abe\u0aa4\u0ac0'],
+    ['mr','\u092e\u0930\u093e\u0920\u0940'],
+    ['ru','\u0420\u0443\u0441\u0441\u043a\u0438\u0439'],
+    ['uk','\u0423\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u0430'],
+    ['zh','\u4e2d\u6587'],
+    ['ja','\u65e5\u672c\u8a9e'],
+    ['ko','\ud55c\uad6d\uc5b4'],
+    ['th','\u0e44\u0e17\u0e22'],
+    ['vi','Ti\u1ebfng Vi\u1ec7t'],
+    ['nl','Nederlands'],
+    ['pl','Polski'],
+    ['sv','Svenska'],
+    ['el','\u0395\u03bb\u03bb\u03b7\u03bd\u03b9\u03ba\u03ac'],
+    ['he','\u05e2\u05d1\u05e8\u05d9\u05ea']
   ];
   let langMap = Object.fromEntries(languages);
   const chosen = () => localStorage.getItem('risaala-language') || 'ar';
@@ -13,11 +44,7 @@
     select.value = langMap[selected] ? selected : 'ar';
   });
   renderLanguages();
-  const translationKey = window.RISAALA_CONFIG?.googleTranslationApiKey || '';
-  if (translationKey) fetch(`https://translation.googleapis.com/language/translate/v2/languages?target=ar&key=${encodeURIComponent(translationKey)}`)
-    .then(response => response.ok ? response.json() : Promise.reject(response.status))
-    .then(data => { const available=data.data?.languages||[]; if(available.length){languages=available.map(item=>[item.language,item.name||item.language]);langMap=Object.fromEntries(languages);renderLanguages();} })
-    .catch(error => console.warn('Could not fetch supported language list', error));
+  const translationKey = ''; // Legacy Google translation disabled; backend NLLB is used.
   const english = {
     'الرئيسية':'Home','عن المشروع':'About the project','الرحلة والخريطة':'Journey & Map','المصادر':'Sources','نبذة عنا':'About us','تسجيل الدخول':'Sign in','إنشاء حساب':'Create account','حسابي':'My account','الإعدادات':'Settings','دخول':'Sign in',
     'منصة معرفية تفاعلية':'An interactive knowledge platform','رحلة في سيرة النبي ﷺ':'A Journey Through the Prophet’s Biography','اكتشف محطات الرحلة وتعرّف على الأحداث التاريخية بأسلوب تفاعلي وموثوق.':'Explore key moments and historical events through an interactive, trusted experience.','ابحث عن محطة أو موضوع...':'Search for a stop or topic...','ابدأ الرحلة':'Begin the journey','محطات، خريطة تفاعلية، ومصادر موثوقة':'Stops, an interactive map, and trusted sources','محطات الرحلة':'Journey stops','اختر محطة وابدأ الاستكشاف':'Choose a stop to explore','تعرّف على الأحداث والمواقع المرتبطة بالسيرة، وانتقل من المحطة إلى مصادرها.':'Discover events and places from the biography, then explore their sources.','بداية الرسالة':'The beginning of the message','مكة المكرمة':'Makkah','الهجرة':'The Hijrah','إلى المدينة':'To Madinah','بدر':'Badr','غزوة بدر':'The Battle of Badr','فتح مكة':'The Conquest of Makkah','المدينة':'Madinah','بناء المجتمع':'Building a community','ما لقينا محطة بهذا الاسم. جربي كلمة ثانية.':'No stops found. Try another search.','الخريطة التفاعلية':'Interactive map','شاهد المحطات على الخريطة':'See the journey on the map','تنقّل بين مكة والمدينة وبدر وغيرها، واطّلع على النبذة النصية أو استمع إليها.':'Explore Makkah, Madinah, Badr, and more. Read or listen to each summary.','استكشف الخريطة':'Explore the map','عرض توضيحي':'Preview','رحلة عبر المكان والزمن':'A journey through place and time','افتح الخريطة لاختيار الأحداث والفترة الزمنية':'Open the map to choose events and a time period','محطات مقترحة للاستكشاف':'suggested stops to explore','هدف دقة إسناد للاختبار':'target source attribution accuracy','لغة مستهدفة':'target languages',
@@ -33,44 +60,110 @@
   };
   const translatePage = async target => {
     const status = $('#language-status');
-    const key = window.RISAALA_CONFIG?.googleTranslationApiKey || '';
-    if (!key) {
-      if(target==='en') { applyEnglish(); document.documentElement.lang='en'; document.documentElement.dir='ltr'; if(status)status.textContent='English selected'; return; }
-      document.documentElement.lang=target; document.documentElement.dir=['ar','he','fa','ur','ps','yi'].includes(target)?'rtl':'ltr';
-      if (status) status.textContent = `تم اختيار ${langMap[target]||target}. لإظهار الترجمة أضيفي مفتاح Google Cloud Translation في config.js.`;
-      const feedback = $('#settings-feedback'); if (feedback) feedback.textContent = 'تم حفظ اللغة. لعرضها أضيفي مفتاح Google Cloud Translation في config.js.';
-      return;
+    const apiBase = window.RISAALA_CONFIG?.apiBaseUrl || 'http://127.0.0.1:8000';
+
+    document.documentElement.lang = target;
+    document.documentElement.dir = ['ar','he','fa','ur'].includes(target) ? 'rtl' : 'ltr';
+
+    if (status) {
+      status.textContent = '\u062c\u0627\u0631\u064d \u062a\u0631\u062c\u0645\u0629 \u0627\u0644\u0635\u0641\u062d\u0629\u2026';
     }
-    if (status) status.textContent = 'جارٍ ترجمة الصفحة…';
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
-      acceptNode(node) {
-        if (!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
-        const parent = node.parentElement;
-        if (!parent || parent.closest('script,style,select,textarea,input,button.notranslate,.notranslate,[aria-hidden="true"]')) return NodeFilter.FILTER_REJECT;
-        return NodeFilter.FILTER_ACCEPT;
+
+    const items = [];
+
+    const walker = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode(node) {
+          const value = node.nodeValue.trim();
+          if (!value || !/[\u0600-\u06FF]/.test(value)) {
+            return NodeFilter.FILTER_REJECT;
+          }
+
+          const parent = node.parentElement;
+          if (
+            !parent ||
+            parent.closest(
+              'script,style,select,textarea,.notranslate,[aria-hidden="true"],#language-status'
+            )
+          ) {
+            return NodeFilter.FILTER_REJECT;
+          }
+
+          return NodeFilter.FILTER_ACCEPT;
+        }
       }
+    );
+
+    while (walker.nextNode()) {
+      items.push({
+        type: 'text',
+        node: walker.currentNode,
+        value: walker.currentNode.nodeValue.trim()
+      });
+    }
+
+    $$('[placeholder],[aria-label],[title]').forEach(el => {
+      if (el.closest('.notranslate')) return;
+
+      ['placeholder','aria-label','title'].forEach(attr => {
+        if (!el.hasAttribute(attr)) return;
+        const value = el.getAttribute(attr)?.trim();
+        if (value && /[\u0600-\u06FF]/.test(value)) {
+          items.push({type:'attr', node:el, attr, value});
+        }
+      });
     });
-    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
-    const originals=nodes.map(node => node.nodeValue);
+
     try {
-      for (let start=0; start<nodes.length; start+=80) {
-        const batch=originals.slice(start,start+80);
-        const response=await fetch(`https://translation.googleapis.com/language/translate/v2?key=${encodeURIComponent(key)}`, {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({q:batch,source:'ar',target,format:'text'})
+      for (let start = 0; start < items.length; start += 40) {
+        const batchItems = items.slice(start, start + 40);
+
+        const response = await fetch(`${apiBase}/api/translate-batch`, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            texts: batchItems.map(item => item.value),
+            source_language: 'ar',
+            target_language: target
+          })
         });
-        if(!response.ok) throw new Error(`Translation request failed (${response.status})`);
-        const data=await response.json();
-        (data.data?.translations||[]).forEach((item,i)=>{if(nodes[start+i]?.isConnected) nodes[start+i].nodeValue=item.translatedText;});
+
+        if (!response.ok) {
+          throw new Error(`Translation request failed (${response.status})`);
+        }
+
+        const data = await response.json();
+        const translations = data.translations || [];
+
+        batchItems.forEach((item, index) => {
+          const translated = translations[index];
+          if (!translated || !item.node?.isConnected) return;
+
+          if (item.type === 'text') {
+            item.node.nodeValue = translated;
+          } else {
+            item.node.setAttribute(item.attr, translated);
+          }
+        });
       }
-      document.documentElement.lang=target;
-      document.documentElement.dir=['ar','he','fa','ur','ps','yi'].includes(target)?'rtl':'ltr';
-      if(status) status.textContent=`تم عرض الصفحة بلغة ${langMap[target]||target}`;
+
+      if (status) {
+        status.textContent =
+          '\u062a\u0645 \u0639\u0631\u0636 \u0627\u0644\u0635\u0641\u062d\u0629 \u0628\u0644\u063a\u0629 ' +
+          (langMap[target] || target);
+      }
     } catch (error) {
       console.error(error);
-      if(status) status.textContent='تعذرت الترجمة. تحققي من إعداد المفتاح والإنترنت وتفعيل Cloud Translation.';
+
+      if (status) {
+        status.textContent =
+          '\u062a\u0639\u0630\u0631\u062a \u0627\u0644\u062a\u0631\u062c\u0645\u0629. \u062a\u0623\u0643\u062f\u064a \u0623\u0646 \u0627\u0644\u062e\u062f\u0645\u0629 \u0627\u0644\u062e\u0644\u0641\u064a\u0629 \u062a\u0639\u0645\u0644.';
+      }
     }
   };
+
   const setLanguage = code => {
     localStorage.setItem('risaala-language',code);
     langSelects.forEach(select=>select.value=code);

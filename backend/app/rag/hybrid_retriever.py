@@ -1,4 +1,5 @@
 import re
+from difflib import SequenceMatcher
 
 from .fts_retriever import search_fts, extract_terms
 
@@ -66,6 +67,56 @@ def _intent_score(question: str, text: str) -> int:
         if date_parts >= 3:
             score += 8
 
+
+    importance_words = (
+        "\u0623\u0647\u0645\u064a\u0629",
+        "\u0644\u0645\u0627\u0630\u0627",
+        "\u0633\u0628\u0628",
+        "\u062f\u0648\u0631",
+        "\u0623\u062b\u0631",
+    )
+
+    if any(word in question for word in importance_words):
+        for phrase, weight in (
+            ("\u0627\u0644\u062f\u0648\u0631", 8),
+            ("\u0623\u0647\u0645\u064a\u0629", 8),
+            ("\u0645\u0631\u0643\u0632", 6),
+            ("\u0645\u0646\u0637\u0644\u0642", 8),
+            ("\u0628\u062f\u0627\u064a\u0629", 4),
+            ("\u0627\u0644\u062f\u0639\u0648\u0629 \u0627\u0644\u0633\u0631\u064a\u0629", 8),
+            ("\u0627\u0644\u062f\u0648\u0631 \u0627\u0644\u0645\u0643\u064a", 8),
+            ("\u0623\u0647\u0644 \u0645\u0643\u0629", 5),
+            ("\u0623\u0631\u0636 \u0645\u0643\u0629", 5),
+        ):
+            if phrase in text:
+                score += weight
+
+        if re.search(
+            r"(?:\u0644\u0623\u0646|\u0644\u0630\u0627|\u062d\u064a\u062b|\u0628\u0633\u0628\u0628|\u0645\u0645\u0627|\u0623\u062f\u0649|\u0633\u0627\u0639\u062f)",
+            text,
+        ):
+            score += 6
+
+        if re.search(
+            r"(?:\u0645\u0631\u062d\u0644\u0629|\u0628\u062f\u0627\u064a\u0629).{0,80}\u0627\u0644\u062f\u0639\u0648\u0629",
+            text,
+        ):
+            score += 6
+
+
+    if any(word in question for word in importance_words):
+        for phrase, weight in (
+            ("\u0645\u0631\u0643\u0632 \u062f\u064a\u0646", 12),
+            ("\u0627\u0644\u0625\u0635\u0644\u0627\u062d", 10),
+            ("\u0645\u0646 \u0627\u0644\u062d\u0643\u0645\u0629", 12),
+            ("\u0644\u0626\u0644\u0627", 8),
+            ("\u064a\u0632\u062f\u0627\u062f \u0639\u0633\u0631", 8),
+            ("\u0627\u0644\u0645\u0642\u0635\u0648\u062f", 6),
+            ("\u0627\u0644\u0643\u0639\u0628\u0629", 6),
+        ):
+            if phrase in text:
+                score += weight
+
     if any(word in question for word in where_words):
         for word in ("\u0641\u064a", "\u0645\u0643\u0629", "\u0627\u0644\u0645\u062f\u064a\u0646\u0629", "\u0628\u0644\u062f", "\u0645\u0643\u0627\u0646", "\u0645\u0648\u0636\u0639"):
             if word in text:
@@ -128,12 +179,22 @@ def hybrid_retrieve(question: str, top_k: int = 8, candidate_k: int = 100):
 
     results = []
     seen_sources = set()
+    seen_texts = []
 
     for item in ranked:
         if item["source"] in seen_sources:
             continue
 
+        candidate_text = _clean(item["snippet"])
+
+        if any(
+            SequenceMatcher(None, candidate_text, previous).ratio() >= 0.90
+            for previous in seen_texts
+        ):
+            continue
+
         seen_sources.add(item["source"])
+        seen_texts.append(candidate_text)
         results.append(item)
 
         if len(results) >= top_k:
