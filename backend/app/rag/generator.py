@@ -5,6 +5,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 from groq import Groq
 
+from .semantic_reranker import _question_type
+
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 load_dotenv(BACKEND_DIR / ".env")
@@ -42,6 +44,24 @@ def _clean_answer(answer: str) -> str:
 
 def generate_answer(question: str, sources: list[dict]) -> str:
     if not sources:
+        return INSUFFICIENT_ANSWER
+
+    # For factual typed questions, preserve the strongest verified
+    # evidence verbatim instead of letting the language model
+    # introduce a different person, place, date, or number.
+    question_kind = _question_type(question)
+
+    if question_kind != "general":
+        for source in sources:
+            text = (
+                source.get("snippet")
+                or source.get("text")
+                or ""
+            ).strip()
+
+            if text:
+                return _clean_answer(text)
+
         return INSUFFICIENT_ANSWER
 
     context_parts = []
