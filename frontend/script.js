@@ -225,10 +225,25 @@
     $('#station-period').textContent=chosen()==='en'&&englishStops?englishStops[2]:stop.period; $('#station-location').textContent=chosen()==='en'&&englishStops?englishStops[3]:stop.location;
     $('#station-event-heading').textContent=chosen()==='en'&&englishStops?englishStops[4]:stop.heading; $('#station-copy').textContent=chosen()==='en'&&englishStops?englishStops[5]:stop.copy;
     const tag=$('.station-hero .tag'); if(tag)tag.textContent=`${chosen()==='en'?'Stop':'محطة'} · ${chosen()==='en'&&englishStops?englishStops[3]:stop.location}`;
-    if(chosen()!=='ar'&&chosen()!=='en'&&translationKey){
+    if(chosen()!=='ar'&&chosen()!=='en'){
       const fields=[$('#station-title'),$('#station-subtitle'),$('#station-period'),$('#station-location'),$('#station-event-heading'),$('#station-copy')];
       const originals=[stop.title,stop.subtitle,stop.period,stop.location,stop.heading,stop.copy];
-      fetch(`https://translation.googleapis.com/language/translate/v2?key=${encodeURIComponent(translationKey)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q:originals,source:'ar',target:chosen(),format:'text'})}).then(r=>r.ok?r.json():Promise.reject(r.status)).then(result=>(result.data?.translations||[]).forEach((item,i)=>{if(fields[i])fields[i].textContent=item.translatedText;})).catch(()=>{});
+      const apiBase=window.RISAALA_CONFIG?.apiBaseUrl||'http://127.0.0.1:8000';
+
+      fetch(`${apiBase}/api/translate-batch`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          texts:originals,
+          source_language:'ar',
+          target_language:chosen()
+        })
+      })
+      .then(r=>r.ok?r.json():Promise.reject(r.status))
+      .then(result=>(result.translations||[]).forEach((item,i)=>{
+        if(fields[i]&&item) fields[i].textContent=item;
+      }))
+      .catch(error=>console.warn('Could not translate station data',error));
     }
   }
   $$('.station-tab').forEach(button=>button.addEventListener('click',()=>{
@@ -542,27 +557,120 @@
   };
   $$('.auth-tab').forEach(tab=>tab.addEventListener('click',()=>setAuthMode(tab.dataset.authMode)));
   if($('#login-form')&&chosen()==='en')setAuthMode('login');
-  $('#login-form')?.addEventListener('submit', e => {
+  $('#login-form')?.addEventListener('submit', async e => {
     e.preventDefault();
-    const identifier = $('#login-id').value.trim(), password = $('#login-password').value;
-    const displayName=$('#register-name')?.value.trim()||'';
-    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
-    const validPhone = /^\+?[\d\s().-]{8,18}$/.test(identifier);
+
+    const email = $('#login-id').value.trim().toLowerCase();
+    const password = $('#login-password').value;
+    const displayName = $('#register-name')?.value.trim() || '';
     const feedback = $('#login-feedback');
-    if (!validEmail && !validPhone) { feedback.textContent = 'أدخلي بريدًا إلكترونيًا صحيحًا أو رقم جوال صالحًا.'; return; }
-    if (authMode==='register'&&!displayName) { feedback.textContent = 'أدخلي اسمك لإكمال إنشاء الحساب.'; return; }
-    if (password.length < 4) { feedback.textContent = 'كلمة المرور يجب أن تتكون من 4 أحرف على الأقل للمعاينة.'; return; }
-    localStorage.setItem('risaala-user', JSON.stringify({ identifier, name:displayName }));
-    $('#login-password').value = '';
-    location.href = 'account.html';
+    const submit = $('#auth-submit');
+    const apiBase = window.RISAALA_CONFIG?.apiBaseUrl || 'http://127.0.0.1:8000';
+
+    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    if (!validEmail) {
+      feedback.textContent = '\u0623\u062f\u062e\u0644\u064a \u0628\u0631\u064a\u062f\u064b\u0627 \u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a\u064b\u0627 \u0635\u062d\u064a\u062d\u064b\u0627.';
+      return;
+    }
+
+    if (authMode === 'register' && !displayName) {
+      feedback.textContent = '\u0623\u062f\u062e\u0644\u064a \u0627\u0633\u0645\u0643 \u0644\u0625\u0643\u0645\u0627\u0644 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u062d\u0633\u0627\u0628.';
+      return;
+    }
+
+    if (password.length < 8) {
+      feedback.textContent = '\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u064a\u062c\u0628 \u0623\u0646 \u062a\u062a\u0643\u0648\u0646 \u0645\u0646 8 \u0623\u062d\u0631\u0641 \u0639\u0644\u0649 \u0627\u0644\u0623\u0642\u0644.';
+      return;
+    }
+
+    submit.disabled = true;
+    feedback.textContent = authMode === 'register'
+      ? '\u062c\u0627\u0631\u064a \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u062d\u0633\u0627\u0628...'
+      : '\u062c\u0627\u0631\u064a \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644...';
+
+    try {
+      if (authMode === 'register') {
+        const registerResponse = await fetch(`${apiBase}/api/auth/register`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({email, password})
+        });
+
+        const registerData = await registerResponse.json();
+
+        if (!registerResponse.ok) {
+          throw new Error(registerData.detail || '\u062a\u0639\u0630\u0631 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u062d\u0633\u0627\u0628.');
+        }
+      }
+
+      const loginResponse = await fetch(`${apiBase}/api/auth/login`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({email, password})
+      });
+
+      const loginData = await loginResponse.json();
+
+      if (!loginResponse.ok) {
+        throw new Error(loginData.detail || '\u062a\u0639\u0630\u0631 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644.');
+      }
+
+      localStorage.setItem('risaala-token', loginData.access_token);
+      localStorage.setItem(
+        'risaala-user',
+        JSON.stringify({
+          identifier: email,
+          name: displayName
+        })
+      );
+
+      $('#login-password').value = '';
+      location.href = 'account.html';
+
+    } catch (error) {
+      const messages = {
+        'Email is already registered.': '\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0645\u0633\u062c\u0644 \u0645\u0633\u0628\u0642\u064b\u0627.',
+        'Invalid email or password.': '\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0623\u0648 \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u063a\u064a\u0631 \u0635\u062d\u064a\u062d\u0629.',
+        'Password must be at least 8 characters.': '\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u064a\u062c\u0628 \u0623\u0646 \u062a\u062a\u0643\u0648\u0646 \u0645\u0646 8 \u0623\u062d\u0631\u0641 \u0639\u0644\u0649 \u0627\u0644\u0623\u0642\u0644.'
+      };
+
+      feedback.textContent =
+        messages[error.message] ||
+        error.message ||
+        '\u062d\u062f\u062b \u062e\u0637\u0623 \u0641\u064a \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0628\u0627\u0644\u062e\u0627\u062f\u0645.';
+    } finally {
+      submit.disabled = false;
+    }
   });
-  const user = (() => { try { return JSON.parse(localStorage.getItem('risaala-user')); } catch { return null; } })();
-  if (user && $('#account-name')) {
-    $('#account-name').textContent = user.name || (user.identifier.includes('@') ? user.identifier.split('@')[0] : 'عضو رِسالة');
+
+  const user = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('risaala-user'));
+    } catch {
+      return null;
+    }
+  })();
+
+  const token = localStorage.getItem('risaala-token');
+
+  if (user && token && $('#account-name')) {
+    $('#account-name').textContent =
+      user.name ||
+      (user.identifier.includes('@')
+        ? user.identifier.split('@')[0]
+        : '\u0639\u0636\u0648 \u0631\u0650\u0633\u0627\u0644\u0629');
+
     $('#account-identifier').textContent = user.identifier;
-    $('#account-login-link').hidden = true; $('#logout-button').hidden = false;
+    $('#account-login-link').hidden = true;
+    $('#logout-button').hidden = false;
   }
-  $('#logout-button')?.addEventListener('click', () => { localStorage.removeItem('risaala-user'); location.reload(); });
+
+  $('#logout-button')?.addEventListener('click', () => {
+    localStorage.removeItem('risaala-user');
+    localStorage.removeItem('risaala-token');
+    location.reload();
+  });
 
   const settingsLang = $('#settings-language');
   if (settingsLang) settingsLang.value = chosen();

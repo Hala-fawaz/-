@@ -54,20 +54,44 @@ def verify_generated_answer(
     system_prompt = """
 You are a strict factual answer verifier.
 
-For each numbered sentence from an AI answer, decide whether EVERY factual claim
-in that sentence is directly supported by the supplied evidence and answers the user's question.
+Evaluate EACH numbered answer sentence independently.
+
+Accept a sentence only when EVERY factual claim, relation, time relation,
+cause, identity, number, place, and event in that sentence is directly
+supported by the supplied evidence.
 
 Rules:
 - Use only the supplied evidence.
 - Do not use outside knowledge.
-- Reject a sentence containing any unsupported claim.
-- Reject a sentence about the wrong person/entity.
+- A sentence must directly contribute to answering the user's exact question.
+- Do not accept redundant restatements of a fact already stated by an earlier accepted sentence.
+- When two sentences give the same answer, keep the first clear direct sentence and reject
+  later repetitions, source-commentary, or paraphrases that add no new requested information.
+- Prefer concise direct answers over phrases such as "the text indicates" or
+  "according to the supplied evidence" when they merely repeat the same fact.
+- Reject a sentence that is factually supported but only provides background,
+  biography, ancestry, commentary, or another attribute that the question did not ask for.
+- For WHERE questions, keep only sentences that actually provide location information.
+- For WHEN questions, keep only sentences that actually provide time information.
+- For WHO questions, keep only sentences that identify or directly describe the requested entity.
+- Reject a sentence if even one part is unsupported.
+- Reject a sentence about the wrong person or entity.
 - Reject corrupted, meaningless, or garbled text.
-- Reject commentary about evidence unless the evidence itself supports it.
+- Reject self-contradictory statements.
+- Reject claims that create a new temporal relation such as before/after
+  unless that exact relation is supported by the evidence.
+- Reject claims that create a new causal relation unless the evidence states it.
+- Do not combine separate evidence fragments into a new fact that no supplied
+  passage actually states.
+- A heading or topic label does not by itself prove an event happened.
+- If the evidence says only "before event E, X did Y", that does NOT support
+  a claim that "X performed event E before event E".
 - Be conservative.
-- Return only:
+
+Return only:
 ACCEPT: 1,2
-or
+
+or:
 ACCEPT: NONE
 """.strip()
 
