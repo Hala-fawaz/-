@@ -15,124 +15,79 @@ client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 )
 
+INSUFFICIENT_ANSWER = "\u0644\u0645 \u0623\u062c\u062f \u0641\u064a \u0627\u0644\u0645\u0635\u0627\u062f\u0631 \u0627\u0644\u0645\u062a\u0627\u062d\u0629 \u062f\u0644\u064a\u0644\u064b\u0627 \u0643\u0627\u0641\u064a\u064b\u0627 \u0644\u0644\u0625\u062c\u0627\u0628\u0629 \u0639\u0646 \u0647\u0630\u0627 \u0627\u0644\u0633\u0624\u0627\u0644."
+
 
 def _clean_answer(answer: str) -> str:
-    answer = re.split(
-        r"\n\s*(?:المصادر|المراجع|المصادر المستخدمة)\s*:?",
-        answer,
-        maxsplit=1,
-    )[0]
+    answer = (answer or "").strip()
+
+    source_labels = (
+        "\u0627\u0644\u0645\u0635\u0627\u062f\u0631",
+        "\u0627\u0644\u0645\u0631\u0627\u062c\u0639",
+        "\u0627\u0644\u0645\u0635\u0627\u062f\u0631 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u0629",
+    )
+
+    for label in source_labels:
+        marker = "\n" + label
+        if marker in answer:
+            answer = answer.split(marker, 1)[0]
 
     answer = re.sub(r"\s+", " ", answer).strip()
 
-    sentences = re.split(r"(?<=[.!؟])\s+", answer)
+    if not answer:
+        return INSUFFICIENT_ANSWER
 
-    unique = []
-    seen = set()
+    return answer
 
-    for sentence in sentences:
-        normalized = re.sub(r"\W+", "", sentence)
-
-        if not normalized or normalized in seen:
-            continue
-
-        seen.add(normalized)
-        unique.append(sentence.strip())
-
-        if len(unique) >= 3:
-            break
-
-    return " ".join(unique).strip()
-
-
-def _extract_when_answer(question: str, sources: list[dict]):
-    if "\u0645\u062a\u0649" not in question:
-        return None
-
-    birth_pattern = re.compile(r"(?:\u0648\u0644\u062f|\u0645\u064a\u0644\u0627\u062f|\u0648\u0644\u0627\u062f)")
-    time_pattern = re.compile(r"(?:\u0639\u0627\u0645|\u0633\u0646\u0629|\u064a\u0648\u0645|\u0627\u0644\u0627\u062b\u0646\u064a\u0646|\u0631\u0628\u064a\u0639|\d{2,4}|[\u0660-\u0669]{2,4})")
-    picks = []
-
-    for source in sources[:3]:
-        text = (source.get("snippet") or source.get("text", "")).replace("[", "").replace("]", "")
-        for part in re.split(r"(?<=[.!?\u061f])\s+|\n+", text):
-            part = " ".join(part.split()).strip(" .")
-            if part and birth_pattern.search(part) and time_pattern.search(part):
-                picks.append(part)
-                break
-
-    unique = []
-    for part in picks:
-        if part not in unique:
-            unique.append(part)
-
-    if not unique:
-        return None
-
-    cleaned_unique = []
-    for part in unique:
-        part = re.split(
-            r"(?:\u0648\u0642\u062f\s+\u0631\u062c\u0651?\u062d|\u062b\u0645\s+\u0647\u0627\u062c\u0631|\u0648\u062a\u0648\u0641\u064a|\u0648\u0639\u0627\u0634|\u0648\u0628\u0642\u0649)",
-            part,
-            maxsplit=1,
-        )[0].strip(" ,.")
-
-        if part:
-            cleaned_unique.append(part)
-
-    return ". ".join(cleaned_unique[:1]) + "."
 
 def generate_answer(question: str, sources: list[dict]) -> str:
     if not sources:
-        return "لا توجد معلومات كافية في المصادر المتاحة للإجابة عن هذا السؤال."
-
-    strict_answer = _extract_when_answer(question, sources)
-    if strict_answer:
-        return strict_answer
+        return INSUFFICIENT_ANSWER
 
     context_parts = []
 
-    for i, source in enumerate(sources[:10], 1):
+    for i, source in enumerate(sources[:4], 1):
         text = source.get("snippet") or source.get("text", "")
         text = text.replace("[", "").replace("]", "").strip()
 
+        if not text:
+            continue
+
         context_parts.append(
-            f"""المصدر {i}
-النص: {text}"""
+            f"EVIDENCE {i}:\n{text}"
         )
+
+    if not context_parts:
+        return INSUFFICIENT_ANSWER
 
     context = "\n\n".join(context_parts)
 
     system_prompt = """
-أنت المرشد المعرفي لمنصة رسالة.
-أجب باللغة العربية اعتمادًا فقط على النصوص المقدمة.
-اكتب فقرة واحدة طبيعية ومباشرة من جملتين إلى 3 جمل.
-لا تكرر أي معلومة.
-ركز على المطلوب في السؤال فقط، وتجاهل التفاصيل الجانبية التي لا تجيب عنه مباشرة.
-إذا كان السؤال عن الأهمية أو السبب، لخّص الدور العام ولا تذكر أمثلة جزئية أو أسماء أشخاص أو قبائل إلا إذا طلبها السؤال.
-لا تحول الإجابة إلى تسلسل أحداث إذا كان السؤال يطلب أهمية أو سببًا.
-لا تستنتج معلومات غير واضحة من النصوص.
-لا تكتب قائمة مصادر أو مراجع.
-لا تخترع معلومات غير موجودة في النصوص.
-إذا لم تكفِ المعلومات، قل بوضوح إن المعلومات المتاحة لا تكفي.
-لا تصدر فتاوى أو أحكامًا شرعية شخصية.
+You are the grounded knowledge guide for the Risalah platform.
 
-في الأسئلة الواقعية مثل: متى، أين، من، كم، التزم بالمعلومة الواردة نصًا في المصادر ولا تستنتج تاريخًا أو رقمًا من عندك.
-لا تذكر أي سنة أو رقم أو مدة زمنية إلا إذا وردت صراحة في النصوص المقدمة.
-إذا اختلفت المصادر في التاريخ أو الرقم، اذكر بوضوح أن هناك اختلافًا واعرض الأقوال الموجودة في النصوص دون ترجيح من عندك.
-إذا ورد في النص عام الفيل فلا تحوله إلى سنة ميلادية إلا إذا ذكرت السنة الميلادية صراحة في أحد النصوص.
-لا تقم بأي عملية حسابية أو تحويل زمني اعتمادًا على النصوص.
-إذا كان السؤال يطلب تاريخًا دقيقًا ولم تتفق النصوص عليه، اذكر أشهر قول موجود في المصادر ثم وضح وجود الخلاف.
-ابدأ مباشرة بالإجابة.
+Answer the user's Arabic question ONLY from the supplied evidence.
+
+Mandatory rules:
+1. Do not use outside knowledge, memory, assumptions, calculations, or guessed facts.
+2. Every factual statement in the answer must be directly supported by the supplied evidence.
+3. Answer the exact question directly and concisely, normally in one to three Arabic sentences.
+4. Do not copy footnotes, bibliographies, reference numbers, editorial notes, or unrelated surrounding text.
+5. Do not mention a date, number, place, person, cause, or detail unless the evidence explicitly supports it.
+6. If the evidence contains different accounts or conflicting dates/numbers, state that the available sources differ and summarize only the alternatives actually present.
+7. If the evidence does not actually answer the question, respond exactly with:
+   ?? ??? ?? ??????? ??????? ?????? ?????? ??????? ?? ??? ??????.
+8. Do not provide personal religious rulings or fatwas.
+9. Do not list sources in the answer; the application displays them separately.
+10. Start directly with the answer. Do not say "according to the context" or describe your reasoning.
 """.strip()
 
-    user_prompt = f"""السؤال:
+    user_prompt = f"""QUESTION:
 {question}
 
-النصوص الموثقة:
+TRUSTED EVIDENCE:
 {context}
 
-الإجابة فقط:
+Write only the grounded Arabic answer.
 """.strip()
 
     response = client.chat.completions.create(
@@ -142,13 +97,9 @@ def generate_answer(question: str, sources: list[dict]) -> str:
             {"role": "user", "content": user_prompt},
         ],
         temperature=0,
-        max_tokens=110,
+        max_tokens=140,
     )
 
     answer = response.choices[0].message.content
 
-    if not answer:
-        return "تعذر إنشاء إجابة من المصادر المتاحة."
-
     return _clean_answer(answer)
-

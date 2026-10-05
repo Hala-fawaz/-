@@ -240,6 +240,92 @@
     if(!('speechSynthesis' in window)){alert('ميزة القراءة الصوتية غير متاحة في هذا المتصفح.');return;}
     speechSynthesis.cancel();const u=new SpeechSynthesisUtterance($('#station-copy')?.textContent||'');u.lang=chosen()==='ar'?'ar-SA':chosen();u.rate=.92;speechSynthesis.speak(u);
   });
+  async function localizeGuideUi() {
+    const lang = chosen();
+
+    if (lang === 'ar') return;
+
+    const submitButton = $('#guide-form button[type="submit"]');
+    const input = $('#guide-question');
+    const suggestionButtons = $$('.suggested-questions [data-question]');
+    const notice = $('.guide-card .guide-content > p');
+
+    const arabicVisible = [
+      "\u0625\u0631\u0633\u0627\u0644 \u2190",
+      "\u0645\u0627 \u0623\u0647\u0645\u064a\u0629 \u0645\u0643\u0629\u061f",
+      "\u0645\u0627 \u0627\u0644\u0623\u0645\u0627\u0643\u0646 \u0627\u0644\u0645\u0647\u0645\u0629\u061f",
+      "\u0645\u0627 \u0627\u0644\u0645\u0635\u0627\u062f\u0631\u061f",
+      "\u0627\u0643\u062a\u0628 \u0633\u0624\u0627\u0644\u0643 \u0647\u0646\u0627...",
+      "\u0627\u0643\u062a\u0628 \u0633\u0624\u0627\u0644\u0643",
+      "\u0627\u0644\u0645\u0631\u0634\u062f \u0645\u062a\u0635\u0644 \u0628\u0642\u0627\u0639\u062f\u0629 \u0627\u0644\u0645\u0639\u0631\u0641\u0629 \u0648\u064a\u062c\u064a\u0628 \u0627\u0639\u062a\u0645\u0627\u062f\u064b\u0627 \u0639\u0644\u0649 \u0627\u0644\u0623\u062f\u0644\u0629 \u0627\u0644\u0645\u0633\u062a\u0631\u062c\u0639\u0629 \u0645\u0646 \u0627\u0644\u0645\u0635\u0627\u062f\u0631 \u0627\u0644\u0645\u062a\u0627\u062d\u0629."
+    ];
+
+    const arabicQuestions = [
+      "\u0645\u0627 \u0623\u0647\u0645\u064a\u0629 \u0645\u0643\u0629 \u0641\u064a \u0647\u0630\u0647 \u0627\u0644\u0631\u062d\u0644\u0629\u061f",
+      "\u0645\u0627 \u0627\u0644\u0623\u0645\u0627\u0643\u0646 \u0627\u0644\u0645\u0647\u0645\u0629 \u0641\u064a \u0627\u0644\u0645\u062d\u0637\u0629\u061f",
+      "\u0645\u0627 \u0645\u0635\u0627\u062f\u0631 \u0645\u0639\u0644\u0648\u0645\u0627\u062a \u0627\u0644\u0645\u062d\u0637\u0629\u061f"
+    ];
+
+    let visible;
+    let translatedQuestions;
+
+    if (lang === 'en') {
+      visible = [
+        'Send \u2190',
+        'Why is Makkah important?',
+        'What are the important places?',
+        'What are the sources?',
+        'Type your question here...',
+        'Type your question',
+        'The guide is connected to the knowledge base and answers using evidence retrieved from the available sources.'
+      ];
+
+      translatedQuestions = [
+        'Why is Makkah important in this journey?',
+        'What are the important places in this stop?',
+        'What are the sources for this stop?'
+      ];
+    } else {
+      const apiBase = window.RISAALA_CONFIG?.apiBaseUrl || 'http://127.0.0.1:8000';
+
+      const response = await fetch(`${apiBase}/api/translate-batch`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          texts: [...arabicVisible, ...arabicQuestions],
+          source_language: 'ar',
+          target_language: lang
+        })
+      });
+
+      if (!response.ok) throw new Error(`Translation HTTP ${response.status}`);
+
+      const data = await response.json();
+      const translations = data.translations || [];
+
+      visible = translations.slice(0, arabicVisible.length);
+      translatedQuestions = translations.slice(arabicVisible.length);
+    }
+
+    if (submitButton && visible[0]) submitButton.textContent = visible[0];
+
+    suggestionButtons.forEach((button, index) => {
+      if (visible[index + 1]) button.textContent = visible[index + 1];
+      if (translatedQuestions[index]) button.dataset.question = translatedQuestions[index];
+    });
+
+    if (input) {
+      if (visible[4]) input.placeholder = visible[4];
+      if (visible[5]) input.setAttribute('aria-label', visible[5]);
+    }
+
+    if (notice && visible[6]) notice.textContent = visible[6];
+  }
+
+  localizeGuideUi().catch(error => {
+    console.warn('Could not localize guide UI', error);
+  });
+
   $$('.suggested-questions [data-question]').forEach(button=>button.addEventListener('click',()=>{const input=$('#guide-question');if(input)input.value=button.dataset.question;}));
   $('#guide-form')?.addEventListener('submit', async e => {
     e.preventDefault();
@@ -250,16 +336,76 @@
 
     if (!box || !question) return;
 
-    box.textContent = '\u062c\u0627\u0631\u064a \u0627\u0644\u0628\u062d\u062b \u0641\u064a \u0627\u0644\u0645\u0635\u0627\u062f\u0631 \u0627\u0644\u0645\u0648\u062b\u0642\u0629...';
+    const apiBase = window.RISAALA_CONFIG?.apiBaseUrl || 'http://127.0.0.1:8000';
+    const lang = chosen();
+
+    const translateTexts = async (texts, sourceLanguage, targetLanguage) => {
+      if (sourceLanguage === targetLanguage) return texts;
+
+      const response = await fetch(`${apiBase}/api/translate-batch`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          texts,
+          source_language: sourceLanguage,
+          target_language: targetLanguage
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Translation HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.translations || texts;
+    };
+
+    let loadingText =
+      '\u062c\u0627\u0631\u064a \u0627\u0644\u0628\u062d\u062b \u0641\u064a \u0627\u0644\u0645\u0635\u0627\u062f\u0631 \u0627\u0644\u0645\u0648\u062b\u0642\u0629...';
+
+    if (lang !== 'ar') {
+      try {
+        [loadingText] = await translateTexts(
+          [loadingText],
+          'ar',
+          lang
+        );
+      } catch (error) {
+        console.warn('Could not translate loading message', error);
+      }
+    }
+
+    box.textContent = loadingText;
     box.classList.add('show');
 
     try {
-      const apiBase = window.RISAALA_CONFIG?.apiBaseUrl || 'http://127.0.0.1:8000';
+      let guideQuestion = question;
+
+      // If the interface is not Arabic and the user typed in that language,
+      // translate the question to Arabic before sending it to the Arabic RAG.
+      if (
+        lang !== 'ar' &&
+        !/[\u0600-\u06FF]/.test(question)
+      ) {
+        try {
+          const translatedQuestion = await translateTexts(
+            [question],
+            lang,
+            'ar'
+          );
+
+          if (translatedQuestion[0]) {
+            guideQuestion = translatedQuestion[0];
+          }
+        } catch (error) {
+          console.warn('Could not translate guide question', error);
+        }
+      }
 
       const response = await fetch(`${apiBase}/api/guide`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question })
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({question: guideQuestion})
       });
 
       if (!response.ok) {
@@ -268,15 +414,40 @@
 
       const data = await response.json();
 
+      let answerText =
+        data.answer ||
+        '\u0644\u0645 \u064a\u062a\u0645 \u0627\u0644\u0639\u062b\u0648\u0631 \u0639\u0644\u0649 \u0625\u062c\u0627\u0628\u0629.';
+
+      let sourcesLabel = '\u0627\u0644\u0645\u0635\u0627\u062f\u0631:';
+      let pageLabel = '\u0635\u0641\u062d\u0629';
+
+      if (lang !== 'ar') {
+        try {
+          const translatedUi = await translateTexts(
+            [answerText, sourcesLabel, pageLabel],
+            'ar',
+            lang
+          );
+
+          answerText = translatedUi[0] || answerText;
+          sourcesLabel = translatedUi[1] || sourcesLabel;
+          pageLabel = lang === 'en'
+            ? 'p.'
+            : (translatedUi[2] || pageLabel);
+        } catch (error) {
+          console.warn('Could not translate guide answer', error);
+        }
+      }
+
       box.textContent = '';
 
       const answer = document.createElement('p');
-      answer.textContent = data.answer || '\u0644\u0645 \u064a\u062a\u0645 \u0627\u0644\u0639\u062b\u0648\u0631 \u0639\u0644\u0649 \u0625\u062c\u0627\u0628\u0629.';
+      answer.textContent = answerText;
       box.appendChild(answer);
 
       if (Array.isArray(data.sources) && data.sources.length) {
         const title = document.createElement('strong');
-        title.textContent = '\u0627\u0644\u0645\u0635\u0627\u062f\u0631:';
+        title.textContent = sourcesLabel;
         box.appendChild(title);
 
         const list = document.createElement('ul');
@@ -284,13 +455,14 @@
         data.sources.slice(0, 5).forEach(source => {
           const item = document.createElement('li');
 
-          const sourceName = (source.source || '\u0645\u0635\u062f\u0631 \u0645\u0648\u062b\u0642')
-            .split(/[\\/]/)
-            .pop()
-            .replace(/\.txt$/i, '');
+          const sourceName =
+            (source.source || '\u0645\u0635\u062f\u0631 \u0645\u0648\u062b\u0642')
+              .split(/[\\/]/)
+              .pop()
+              .replace(/\.txt$/i, '');
 
           item.textContent = source.page
-            ? `${sourceName} \u2014 \u0635\u0641\u062d\u0629 ${source.page}`
+            ? `${sourceName} \u2014 ${pageLabel} ${source.page}`
             : sourceName;
 
           list.appendChild(item);
@@ -300,7 +472,16 @@
       }
     } catch (error) {
       console.error('Guide error:', error);
-      box.textContent = '\u062a\u0639\u0630\u0631 \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0628\u0627\u0644\u0645\u0631\u0634\u062f. \u062a\u0623\u0643\u062f\u064a \u0623\u0646 \u0627\u0644\u062e\u062f\u0645\u0629 \u0627\u0644\u062e\u0644\u0641\u064a\u0629 \u062a\u0639\u0645\u0644 \u062b\u0645 \u062d\u0627\u0648\u0644\u064a \u0645\u0631\u0629 \u0623\u062e\u0631\u0649.';
+
+      let errorText =
+        '\u062a\u0639\u0630\u0631 \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0628\u0627\u0644\u0645\u0631\u0634\u062f. \u062a\u0623\u0643\u062f\u064a \u0623\u0646 \u0627\u0644\u062e\u062f\u0645\u0629 \u0627\u0644\u062e\u0644\u0641\u064a\u0629 \u062a\u0639\u0645\u0644 \u062b\u0645 \u062d\u0627\u0648\u0644\u064a \u0645\u0631\u0629 \u0623\u062e\u0631\u0649.';
+
+      if (lang === 'en') {
+        errorText =
+          'Could not connect to the guide. Make sure the backend service is running, then try again.';
+      }
+
+      box.textContent = errorText;
     }
   });
 
