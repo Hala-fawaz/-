@@ -50,7 +50,7 @@ def ask_guide(request: GuideRequest):
         question,
         candidates,
         top_k=10,
-        max_chunks=400,
+        max_chunks=160,
     )
 
     question_terms = extract_terms(question)
