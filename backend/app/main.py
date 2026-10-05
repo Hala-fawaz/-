@@ -18,9 +18,11 @@ class TranslationRequest(BaseModel):
     source_language: str = "arb_Arab"
     target_language: str = "eng_Latn"
 
+
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "risalah-ai"}
+
 
 @app.post("/api/translate")
 def translate(request: TranslationRequest):
