@@ -13,7 +13,7 @@ load_dotenv(BACKEND_DIR / ".env")
 
 MODEL_NAME = os.getenv(
     "GROQ_TRANSLATION_MODEL",
-    "allam-2-7b",
+    "openai/gpt-oss-120b",
 )
 
 MAX_CHUNK_CHARS = 1200
