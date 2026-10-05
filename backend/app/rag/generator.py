@@ -4,12 +4,13 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from groq import Groq
+from .llm_options import llm_options
 
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 load_dotenv(BACKEND_DIR / ".env")
 
-MODEL_NAME = "allam-2-7b"
+MODEL_NAME = os.getenv("GROQ_MODEL", "allam-2-7b")
 MAX_TOKENS = 220
 MAX_SENTENCES = 3
 
@@ -210,7 +211,7 @@ Write only the grounded Arabic answer.
             {"role": "user", "content": user_prompt},
         ],
         temperature=0,
-        max_tokens=MAX_TOKENS,
+        **llm_options(MODEL_NAME, MAX_TOKENS),
     )
 
     choice = response.choices[0]
