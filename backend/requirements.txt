@@ -6,5 +6,3 @@ bcrypt
 PyJWT
 groq
 python-dotenv
-sentence-transformers
-numpy
