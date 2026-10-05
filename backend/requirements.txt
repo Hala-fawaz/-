@@ -6,3 +6,4 @@ bcrypt
 PyJWT
 groq
 python-dotenv
+psycopg2-binary
