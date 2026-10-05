@@ -7,3 +7,22 @@ out/
 __pycache__/
 *.pyc
 .DS_Store
+# Secrets
+.env
+backend/.env
+
+# Python
+.venv/
+backend/.venv/
+__pycache__/
+*.pyc
+
+# Local databases
+risalah.db
+backend/risalah.db
+backend/knowledge/index/*.db
+backend/knowledge/index/*.faiss
+
+# Frontend dependencies
+frontend/node_modules/
+backend/knowledge/index/chunks.json
