@@ -46,11 +46,24 @@ def translate_text(text: str, source_language: str, target_language: str):
     try:
         with urlopen(url, timeout=30) as response:
             data = json.loads(response.read().decode("utf-8"))
-    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as error:
-        raise HTTPException(
-            status_code=502,
-            detail="تعذر الاتصال بخدمة الترجمة الخارجية",
-        ) from error
+    except HTTPError as error:
+    details = error.read().decode("utf-8", errors="replace")
+    raise HTTPException(
+        status_code=502,
+        detail=f"MyMemory HTTP {error.code}: {details[:300]}",
+    ) from error
+
+except URLError as error:
+    raise HTTPException(
+        status_code=502,
+        detail=f"MyMemory network error: {error.reason}",
+    ) from error
+
+except (TimeoutError, json.JSONDecodeError) as error:
+    raise HTTPException(
+        status_code=502,
+        detail=f"تعذر إكمال طلب الترجمة: {error}",
+    ) from error
 
     if data.get("responseStatus") != 200:
         raise HTTPException(
