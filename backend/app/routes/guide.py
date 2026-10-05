@@ -83,13 +83,19 @@ def ask_guide(request: GuideRequest):
             "sources": [],
         }
 
-    # 5) LLM verifier checks that each sentence directly answers
-    # the exact question about the same subject/entity.
-    verified = verify_evidence(
-        question,
-        sentence_results,
-        max_items=8,
-    )
+    # 5) Typed factual questions use the strongest deterministic
+    # retrieval result directly. This prevents an LLM verifier from
+    # replacing a better grounded fact with a weaker sentence.
+    question_kind = _question_type(question)
+
+    if question_kind != "general":
+        verified = sentence_results[:1]
+    else:
+        verified = verify_evidence(
+            question,
+            sentence_results,
+            max_items=8,
+        )
 
     if not verified:
         return {
@@ -153,11 +159,12 @@ def ask_guide(request: GuideRequest):
     )
 
     # 7) Verify every generated sentence against the trusted evidence.
-    answer = verify_generated_answer(
-        question,
-        answer,
-        evidence,
-    )
+    if question_kind == "general":
+        answer = verify_generated_answer(
+            question,
+            answer,
+            evidence,
+        )
 
     # References come only from evidence that passed verification.
     references = []
