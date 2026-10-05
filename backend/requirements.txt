@@ -1,6 +1,10 @@
 fastapi
 uvicorn[standard]
 pydantic
-transformers<5
-torch
-sentencepiece
+sqlalchemy
+bcrypt
+PyJWT
+groq
+python-dotenv
+sentence-transformers
+numpy
