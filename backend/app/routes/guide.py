@@ -6,6 +6,7 @@ from ..rag.semantic_reranker import (
     semantic_rerank,
     sentence_rerank,
     has_sufficient_evidence,
+    _question_type,
 )
 from ..rag.evidence_verifier import verify_evidence
 from ..rag.generator import generate_answer
@@ -97,11 +98,34 @@ def ask_guide(request: GuideRequest):
             "sources": [],
         }
 
-    # Keep strongest verified evidence, avoiding duplicate sentences.
+    # Keep strongest verified evidence while preventing factual
+    # questions from mixing unrelated entities across different sources.
+    verified = sorted(
+        verified,
+        key=lambda item: float(item.get("sentence_score", 0) or 0),
+        reverse=True,
+    )
+
     evidence = []
     seen_texts = set()
+    question_kind = _question_type(question)
+
+    strongest_group = None
+    if verified and question_kind != "general":
+        strongest_group = (
+            verified[0].get("source"),
+            verified[0].get("page"),
+        )
 
     for item in verified:
+        if strongest_group is not None:
+            item_group = (
+                item.get("source"),
+                item.get("page"),
+            )
+            if item_group != strongest_group:
+                continue
+
         text = " ".join(
             (item.get("snippet") or "").split()
         )
