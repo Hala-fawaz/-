@@ -1,3 +1,7 @@
+window.RISAALA_CONFIG = {
+  apiBaseUrl: 'https://risalah.onrender.com/health',
+  googleTranslationApiKey: ''
+};
 /*
   Optional multilingual translation setup.
   Add a Google Cloud Translation - Basic API key here to enable the language menu.
