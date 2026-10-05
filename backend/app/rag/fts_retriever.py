@@ -7,16 +7,53 @@ BACKEND_DIR = Path(__file__).resolve().parents[2]
 DB_PATH = BACKEND_DIR / "knowledge" / "index" / "knowledge_fts.db"
 
 ARABIC_STOPWORDS = {
-    "ما", "ماذا", "من", "في", "على", "عن", "إلى", "الى",
-    "هل", "كيف", "متى", "أين", "اين", "لماذا", "هو", "هي",
-    "كان", "كانت", "هذا", "هذه", "ذلك", "التي", "الذي",
+    "\u0645\u0627",
+    "\u0645\u0627\u0630\u0627",
+    "\u0645\u0646",
+    "\u0641\u064a",
+    "\u0639\u0644\u0649",
+    "\u0639\u0646",
+    "\u0627\u0644\u0649",
+    "\u0647\u0644",
+    "\u0643\u064a\u0641",
+    "\u0645\u062a\u0649",
+    "\u0627\u064a\u0646",
+    "\u0644\u0645\u0627\u0630\u0627",
+    "\u0647\u0648",
+    "\u0647\u064a",
+    "\u0643\u0627\u0646",
+    "\u0643\u0627\u0646\u062a",
+    "\u0647\u0630\u0627",
+    "\u0647\u0630\u0647",
+    "\u0630\u0644\u0643",
+    "\u0627\u0644\u062a\u064a",
+    "\u0627\u0644\u0630\u064a",
 }
+
 
 INTENT_WORDS = {
     "أهمية", "اهمية", "أهم", "اهم",
     "اشرح", "وضح", "اذكر",
     "حدثني", "أخبرني", "اخبرني",
 }
+
+
+def _normalize_arabic_word(word: str) -> str:
+    word = re.sub(r"[\u064B-\u065F\u0670\u0640]", "", word or "")
+
+    replacements = {
+        "\u0623": "\u0627",
+        "\u0625": "\u0627",
+        "\u0622": "\u0627",
+        "\u0649": "\u064a",
+        "\u0624": "\u0648",
+        "\u0626": "\u064a",
+    }
+
+    for source, target in replacements.items():
+        word = word.replace(source, target)
+
+    return word
 
 
 def extract_terms(question: str):
@@ -27,12 +64,22 @@ def extract_terms(question: str):
         for word in words
     ]
 
+    normalized_stopwords = {
+        _normalize_arabic_word(word)
+        for word in ARABIC_STOPWORDS
+    }
+
+    normalized_intent_words = {
+        _normalize_arabic_word(word)
+        for word in INTENT_WORDS
+    }
+
     return [
         word
         for word in words
         if len(word) > 1
-        and word not in ARABIC_STOPWORDS
-        and word not in INTENT_WORDS
+        and _normalize_arabic_word(word) not in normalized_stopwords
+        and _normalize_arabic_word(word) not in normalized_intent_words
     ]
 
 
