@@ -4,12 +4,13 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from groq import Groq
+from .llm_options import llm_options
 
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 load_dotenv(BACKEND_DIR / ".env")
 
-MODEL_NAME = "allam-2-7b"
+MODEL_NAME = os.getenv("GROQ_MODEL", "allam-2-7b")
 
 client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
@@ -112,7 +113,7 @@ ANSWER SENTENCES:
             {"role": "user", "content": user_prompt},
         ],
         temperature=0,
-        max_tokens=30,
+        **llm_options(MODEL_NAME, 30),
     )
 
     output = (response.choices[0].message.content or "").strip()

@@ -32,9 +32,10 @@ def ask_guide(request: GuideRequest):
         )
 
     # 1) Keyword retrieval from the full knowledge base.
+    # 150 instead of 80: correct passages were found at ranks 116-126.
     candidates = search_fts(
         question,
-        top_k=80,
+        top_k=150,
     )
 
     if not candidates:
@@ -44,15 +45,18 @@ def ask_guide(request: GuideRequest):
             "sources": [],
         }
 
-    # 2) Semantic reranking over overlapping chunks.
+    question_terms = extract_terms(question)
+
+    # 2) Semantic reranking over overlapping chunks
+    #    (at most 2 chunks per page, chosen by question-term hits).
     chunk_results = semantic_rerank(
         question,
         candidates,
-        top_k=10,
-        max_chunks=140,
+        top_k=25,
+        max_chunks=320,
+        question_terms=question_terms,
+        chunks_per_page=2,
     )
-
-    question_terms = extract_terms(question)
 
     # 3) General evidence gate before deeper processing.
     trusted_chunks = [
@@ -72,7 +76,7 @@ def ask_guide(request: GuideRequest):
     sentence_results = sentence_rerank(
         question,
         trusted_chunks,
-        top_k=10,
+        top_k=20,
     )
 
     if not sentence_results:
@@ -87,7 +91,7 @@ def ask_guide(request: GuideRequest):
     verified = verify_evidence(
         question,
         sentence_results,
-        max_items=8,
+        max_items=16,
     )
 
     if not verified:
@@ -134,6 +138,9 @@ def ask_guide(request: GuideRequest):
         answer,
         evidence,
     )
+
+    if answer == INSUFFICIENT_ANSWER:
+        return {"question": question, "answer": INSUFFICIENT_ANSWER, "sources": []}
 
     # References come only from evidence that passed verification.
     references = []
