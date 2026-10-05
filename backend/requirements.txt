@@ -4,3 +4,11 @@ pydantic
 transformers<5
 torch
 sentencepiece
+groq
+python-dotenv
+sentence-transformers<6
+faiss-cpu
+sqlalchemy
+pymupdf
+bcrypt
+PyJWT
