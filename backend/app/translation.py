@@ -81,3 +81,5 @@ except (TimeoutError, json.JSONDecodeError) as error:
         "target_language": target_language,
         "model": MODEL_NAME,
     }
+
+
