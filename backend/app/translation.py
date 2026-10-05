@@ -1,79 +1,35 @@
-import json
-from urllib.parse import urlencode
-from urllib.request import urlopen
-from urllib.error import URLError, HTTPError
+from functools import lru_cache
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
-from fastapi import HTTPException
+MODEL_NAME = "facebook/nllb-200-distilled-600M"
 
 
-MODEL_NAME = "MyMemory Translation API"
-
-# هذا المثال يدعم العربية والإنجليزية فقط.
-LANGUAGE_CODES = {
-    "arb_Arab": "ar",
-    "eng_Latn": "en",
-    "ar": "ar",
-    "en": "en",
-}
+@lru_cache(maxsize=1)
+def load_model():
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
+    return tokenizer, model
 
 
 def translate_text(text: str, source_language: str, target_language: str):
-    source = LANGUAGE_CODES.get(source_language)
-    target = LANGUAGE_CODES.get(target_language)
+    # Research adapter. Keep this isolated so the team can replace it
+    # with an approved production translation provider later.
+    tokenizer, model = load_model()
 
-    if not source or not target:
-        raise HTTPException(
-            status_code=400,
-            detail="رمز اللغة غير مضاف إلى خدمة الترجمة",
-        )
+    tokenizer.src_lang = source_language
+    encoded = tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
 
-    if not text or not text.strip():
-        raise HTTPException(status_code=400, detail="اكتبي النص المراد ترجمته")
+    generated_tokens = model.generate(
+        **encoded,
+        forced_bos_token_id=tokenizer.convert_tokens_to_ids(target_language),
+        max_length=200,
+        num_beams=4,
+    )
 
-    # حد MyMemory في الطلب الواحد 500 بايت؛ النص العربي يستهلك بايتات أكثر.
-    if len(text.encode("utf-8")) > 500:
-        raise HTTPException(
-            status_code=413,
-            detail="النص أطول من الحد التجريبي لخدمة الترجمة",
-        )
-
-    query = urlencode({
-        "q": text,
-        "langpair": f"{source}|{target}",
-    })
-    url = f"https://api.mymemory.translated.net/get?{query}"
-
-    try:
-        with urlopen(url, timeout=30) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except HTTPError as error:
-    details = error.read().decode("utf-8", errors="replace")
-    raise HTTPException(
-        status_code=502,
-        detail=f"MyMemory HTTP {error.code}: {details[:300]}",
-    ) from error
-
-except URLError as error:
-    raise HTTPException(
-        status_code=502,
-        detail=f"MyMemory network error: {error.reason}",
-    ) from error
-
-except (TimeoutError, json.JSONDecodeError) as error:
-    raise HTTPException(
-        status_code=502,
-        detail=f"تعذر إكمال طلب الترجمة: {error}",
-    ) from error
-
-    if data.get("responseStatus") != 200:
-        raise HTTPException(
-            status_code=502,
-            detail=data.get("responseDetails") or "خدمة الترجمة لم تُرجع نتيجة",
-        )
-
-    result = data.get("responseData", {}).get("translatedText")
-    if not result:
-        raise HTTPException(status_code=502, detail="لم تصل ترجمة من الخدمة")
+    result = tokenizer.batch_decode(
+        generated_tokens,
+        skip_special_tokens=True
+    )[0]
 
     return {
         "translation": result,
@@ -81,5 +37,3 @@ except (TimeoutError, json.JSONDecodeError) as error:
         "target_language": target_language,
         "model": MODEL_NAME,
     }
-
-
