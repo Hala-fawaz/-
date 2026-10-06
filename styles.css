@@ -364,14 +364,7 @@ input {
   top: -80px;
 }
 
-.orb:after {
-  content: "";
-  position: absolute;
-  inset: -15px;
-  border: 1px solid #c5a65555;
-  border-radius: 50%;
-  transform: rotate(-25deg) scaleY(0.42);
-}
+
 .feature-band {
   background: var(--paper);
   border-block: 1px solid var(--line);
