@@ -318,7 +318,7 @@ input {
   inset: 0;
   background:
     linear-gradient(90deg, #08192aef 0%, #08192acc 44%, #08192a28 100%),
-    url('assets/earth-orbit.gif') center/cover;
+    url('assets/earth-orbit-clean.gif') center/cover;
 }
 .hero-inner {
   position: relative;
