@@ -78,13 +78,46 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        const hero = document.getElementById('station-hero-section');
         if (!station.image) {
             document.querySelector('.station-photo')?.remove();
-            const hero = document.getElementById('station-hero-section');
             if (hero) {
                 hero.style.backgroundImage = '';
                 hero.classList.add('no-image');
             }
+        } else if (hero) {
+            // Keep the picture clear: darken only the side the title sits on
+            const titleSide = document.documentElement.dir === 'ltr' ? '90deg' : '270deg';
+            hero.style.backgroundImage = `linear-gradient(${titleSide}, #102945e6 0%, #102945b3 38%, #10294533 100%), url('${station.image}')`;
         }
+    }
+    // ---- Home page: play the hero animation once, then settle on a still frame ----
+    const heroMedia = document.querySelector('.hero-media');
+    const lessMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        || document.documentElement.classList.contains('reduce-motion')
+        || Boolean(navigator.connection && navigator.connection.saveData);
+    if (heroMedia && !lessMotion) {
+        const DURATION = 6000; // length of one pass of the GIF, in milliseconds
+        const anim = new Image();
+        anim.className = 'hero-anim';
+        anim.alt = '';
+        // The still image stays visible until the animation has fully downloaded
+        anim.addEventListener('load', () => {
+            heroMedia.append(anim);
+            requestAnimationFrame(() => anim.classList.add('playing'));
+            setTimeout(() => {
+                // Copy the frame on screen to the canvas, then drop the GIF so it cannot loop
+                const frame = heroMedia.querySelector('.hero-frame');
+                if (frame && anim.naturalWidth) {
+                    frame.width = anim.naturalWidth;
+                    frame.height = anim.naturalHeight;
+                    frame.getContext('2d').drawImage(anim, 0, 0);
+                    frame.hidden = false;
+                }
+                anim.remove();
+                anim.removeAttribute('src');
+            }, DURATION - 120);
+        }, { once: true });
+        anim.src = 'assets/earth-orbit-clean.gif';
     }
 });
