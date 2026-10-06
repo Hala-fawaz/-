@@ -16,40 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
 (() => {
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => [...root.querySelectorAll(s)];
-  let languages = 
-    ['ar','العربية'],
-  ['en','English'],
-  ['fr','Français'],
-  ['es','Español'],
-  ['de','Deutsch'],
-  ['it','Italiano'],
-  ['pt','Português'],
-  ['tr','Türkçe'],
-  ['ur','اردو'],
-  ['fa','فارسی'],
-  ['id','Bahasa Indonesia'],
-  ['ms','Bahasa Melayu'],
-  ['bn','বাংলা'],
-  ['hi','हिन्दी'],
-  ['ta','தமிழ்'],
-  ['te','తెలుగు'],
-  ['ml','മലയാളം'],
-  ['pa','ਪੰਜਾਬੀ'],
-  ['gu','ગુજરાતી'],
-  ['mr','मराठी'],
-  ['ru','Русский'],
-  ['uk','Українська'],
-  ['zh','中文'],
-  ['ja','日本語'],
-  ['ko','한국어'],
-  ['th','ไทย'],
-  ['vi','Tiếng Việt'],
-  ['nl','Nederlands'],
-  ['pl','Polski'],
-  ['sv','Svenska'],
-  ['el','Ελληνικά'],
-  ['he','עברית']
-];
+  let languages = [
+    ['ar','العربية'],['en','English'],['fr','Français'],['es','Español'],['de','Deutsch'],['it','Italiano'],['pt','Português'],['ru','Русский'],['tr','Türkçe'],['ur','اردو'],['fa','فارسی'],['hi','हिन्दी'],['bn','বাংলা'],['id','Bahasa Indonesia'],['ms','Bahasa Melayu'],['zh-CN','中文（简体）'],['zh-TW','中文（繁體）'],['ja','日本語'],['ko','한국어'],['sw','Kiswahili'],['ha','Hausa'],['yo','Yorùbá'],['ig','Igbo'],['am','አማርኛ'],['af','Afrikaans'],['sq','Shqip'],['az','Azərbaycanca'],['eu','Euskara'],['be','Беларуская'],['bg','Български'],['bs','Bosanski'],['ca','Català'],['ceb','Cebuano'],['co','Corsu'],['hr','Hrvatski'],['cs','Čeština'],['da','Dansk'],['nl','Nederlands'],['eo','Esperanto'],['et','Eesti'],['fi','Suomi'],['fy','Frysk'],['gl','Galego'],['ka','ქართული'],['el','Ελληνικά'],['gu','ગુજરાતી'],['ht','Kreyòl Ayisyen'],['haw','ʻŌlelo Hawaiʻi'],['he','עברית'],['hu','Magyar'],['is','Íslenska'],['ga','Gaeilge'],['jv','Basa Jawa'],['kn','ಕನ್ನಡ'],['kk','Қазақша'],['km','ខ្មែរ'],['rw','Ikinyarwanda'],['ku','Kurdî'],['ky','Кыргызча'],['lo','ລາວ'],['la','Latina'],['lv','Latviešu'],['lt','Lietuvių'],['lb','Lëtzebuergesch'],['mk','Македонски'],['mg','Malagasy'],['ml','മലയാളം'],['mt','Malti'],['mi','Māori'],['mr','मराठी'],['mn','Монгол'],['my','မြန်မာ'],['ne','नेपाली'],['no','Norsk'],['ny','Chichewa'],['or','ଓଡ଼ିଆ'],['ps','پښتو'],['pl','Polski'],['pa','ਪੰਜਾਬੀ'],['ro','Română'],['sm','Gagana Samoa'],['gd','Gàidhlig'],['sr','Српски'],['st','Sesotho'],['sn','chiShona'],['sd','سنڌي'],['si','සිංහල'],['sk','Slovenčina'],['sl','Slovenščina'],['so','Soomaali'],['su','Basa Sunda'],['sv','Svenska'],['tg','Тоҷикӣ'],['ta','தமிழ்'],['tt','Tatarça'],['te','తెలుగు'],['th','ไทย'],['tk','Türkmençe'],['uk','Українська'],['ug','ئۇيغۇرچە'],['uz','Oʻzbekcha'],['vi','Tiếng Việt'],['cy','Cymraeg'],['xh','isiXhosa'],['yi','ייִדיש'],['zu','isiZulu']
+  ];
   let langMap = Object.fromEntries(languages);
   const chosen = () => localStorage.getItem('risaala-language') || 'ar';
   const langSelects = [$('#language-select'), $('#settings-language')].filter(Boolean);
