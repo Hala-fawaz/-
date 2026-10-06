@@ -312,18 +312,34 @@ input {
   min-height: 680px;
   display: flex;
   align-items: center;
-        url('https://i.imgur.com/https://imgur.com/a/FA5qJSW.gif') center/cover;
-
 }
 
+.hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
 
-.hero:before {
+.hero::before {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(90deg, #08192aef 0%, #08192acc 44%, #08192a28 100%),
-    url('https://i.imgur.com/https://imgur.com/a/FA5qJSW.gif') center/cover;
+  background: linear-gradient(
+    90deg,
+    #08192aef 0%,
+    #08192acc 44%,
+    #08192a28 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hero > :not(.hero-video) {
+  position: relative;
+  z-index: 2;
 }
 .hero-inner {
   position: relative;
