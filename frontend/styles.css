@@ -1936,6 +1936,8 @@ body.dark-theme .auth-tab.active {
 .tech-next {
   background: #15191d;
   color: white;
+      font: 150 11px "Readex Pro";
+
 }
 .tech-python {
   background: #e9f0f9;
