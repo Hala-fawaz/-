@@ -421,8 +421,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  $('#station-search-form')?.addEventListener('submit',e=>e.preventDefault());
-  $('#station-search')?.addEventListener('input',e=>{
+$('#station-search-form')?.addEventListener('submit', e => {
+  e.preventDefault();
+
+  const input = $('#station-search');
+  const query = (input?.value || '').trim().toLocaleLowerCase();
+
+  if (!query) return;
+
+  const cards = $$('[data-home-station]');
+
+  const match = cards.find(card =>
+    card.textContent.toLocaleLowerCase().includes(query)
+  );
+
+  if (match) {
+    window.location.href = match.getAttribute('href');
+    return;
+  }
+
+  const empty = $('#search-empty');
+  if (empty) empty.hidden = false;
+});
+    $('#station-search')?.addEventListener('input',e=>{
     const query=e.target.value.trim().toLocaleLowerCase();let visible=0;
     $$('[data-home-station]').forEach(card=>{const match=card.textContent.toLocaleLowerCase().includes(query);card.hidden=!match;if(match)visible++;});
     const empty=$('#search-empty');if(empty)empty.hidden=visible>0;
