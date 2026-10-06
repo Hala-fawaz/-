@@ -440,6 +440,7 @@ $('#station-search-form')?.addEventListener('submit', e => {
     return;
   }
 
+    
   const empty = $('#search-empty');
   if (empty) empty.hidden = false;
 });
