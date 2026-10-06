@@ -5,6 +5,5 @@
   Never publish an unrestricted key.
 */
 window.RISAALA_CONFIG = {
-  googleTranslationApiKey: '',
-  apiBaseUrl: 'https://risalah.onrender.com'
+  googleTranslationApiKey: ''
 };
