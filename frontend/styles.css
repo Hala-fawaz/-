@@ -311,13 +311,14 @@ input {
   display: flex;
   align-items: center;
 }
+
 .hero:before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   background:
     linear-gradient(90deg, #08192aef 0%, #08192acc 44%, #08192a28 100%),
-    url("assets/earth-horizon.jpg") center/cover;
+    url('assets/earth-orbit.gif') center/cover;
 }
 .hero-inner {
   position: relative;
@@ -362,22 +363,7 @@ input {
   inset-inline-start: -50px;
   top: -80px;
 }
-.orb {
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 35% 32%,
-    #ffdd82,
-    #805b24 8%,
-    #152a42 35%,
-    #071522 68%
-  );
-  box-shadow:
-    inset -22px -14px 35px #0009,
-    0 0 60px #cfad5950;
-  position: relative;
-}
+
 .orb:after {
   content: "";
   position: absolute;
