@@ -471,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const nameWrap=$('#register-name-wrap');if(nameWrap)nameWrap.hidden=!creating;
     const nafath=$('#nafath-button');if(nafath)nafath.hidden=creating;
     const title=$('#auth-title');if(title)title.textContent=chosen()==='en'?(creating?'Create a new account':'Sign in to your account'):(creating?'إنشاء حساب جديد':'الدخول إلى حسابك');
-    const description=$('#auth-description');if(description)description.textContent=chosen()==='en'?(creating?'Enter your name and email or mobile number to create a demo account.':'Enter your email or mobile number.'):(creating?'أدخل اسمك وبريدك الإلكتروني أو رقم جوالك لإنشاء حساب تجريبي.':'أدخل بريدك الإلكتروني أو رقم جوالك.');
+    const description=$('#auth-description');if(description)description.textContent=chosen()==='en'?(creating?'Enter your name and email or mobile number to create a demo account.':'Enter your email or mobile number.'):(creating?'أدخل اسمك وبريدك الإلكتروني أو رقم جوالك لإنشاء حساب جديد.':'أدخل بريدك الإلكتروني أو رقم جوالك.');
     const submit=$('#auth-submit');if(submit)submit.textContent=chosen()==='en'?(creating?'Create account':'Sign in'):(creating?'إنشاء حساب':'تسجيل الدخول');
     const password=$('#login-password');if(password)password.autocomplete=creating?'new-password':'current-password';
     const feedback=$('#login-feedback');if(feedback)feedback.textContent='';
