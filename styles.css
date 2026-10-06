@@ -2253,3 +2253,98 @@ body.dark-theme .tech-note {
 .leaflet-control-attribution {
     display: none !important;
 }
+
+/* Events sidebar: fixed height matched to the map, quick search, slim scrollbar */
+.event-sidebar {
+    display: flex;
+    flex-direction: column;
+    max-height: 534px; /* map (500px) + shell padding and border */
+}
+.sidebar-title { flex: none; }
+.sidebar-search {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.sidebar-search:focus-within {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px var(--line);
+}
+.sidebar-search span {
+    color: var(--gold);
+    font-size: 16px;
+    line-height: 1;
+}
+.sidebar-search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: 13px;
+    padding: 9px 0;
+}
+.sidebar-search input::placeholder { color: var(--muted); }
+.event-sidebar .event-list {
+    flex: 1;
+    min-height: 0;
+    align-content: start;
+    grid-auto-rows: max-content; /* keep groups at full height so the list scrolls */
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* momentum scrolling on older iOS */
+    touch-action: pan-y; /* a finger drag scrolls the list vertically */
+    overscroll-behavior: contain; /* don't drag the page when the list hits its end */
+    padding-inline-end: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(194, 152, 36, 0.35) transparent;
+}
+.event-sidebar .event-list::-webkit-scrollbar { width: 6px; }
+.event-sidebar .event-list::-webkit-scrollbar-track { background: transparent; }
+.event-sidebar .event-list::-webkit-scrollbar-thumb {
+    background: rgba(194, 152, 36, 0.35);
+    border-radius: 999px;
+}
+.event-sidebar .event-list::-webkit-scrollbar-thumb:hover { background: rgba(194, 152, 36, 0.6); }
+.event-sidebar .sidebar-group { margin-bottom: 0; }
+.event-sidebar .sidebar-group[hidden] { display: none; }
+.sidebar-empty {
+    margin: 14px 0 4px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+}
+@media (max-width: 900px) {
+    .event-sidebar { max-height: 460px; }
+}
+
+/* Station page: paragraph breaks in the history, and the source excerpt */
+#station-copy { white-space: pre-line; }
+.station-source-quote {
+    margin: 20px 0 0;
+    font-size: 15px;
+}
+.station-source-quote strong {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--gold);
+    font-size: 13px;
+}
+
+/* Station hero without a featured image: soft solid backdrop */
+.station-hero.no-image {
+    background: linear-gradient(135deg, #f6efdc, #ecdfbb);
+    color: var(--ink);
+    border-bottom: 1px solid var(--line);
+}
+.station-hero.no-image .back-map { color: #8a6a14; }
+.station-hero.no-image p { color: var(--muted); }

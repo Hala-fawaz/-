@@ -76,10 +76,23 @@
             <aside class="event-sidebar">
               <div class="sidebar-title">
                 <h2>أهم الأحداث</h2>
-                <span id="event-count">7 محطات</span>
+                <span id="event-count">52 محطة</span>
               </div>
+              <label class="sidebar-search">
+                <span aria-hidden="true">⌕</span>
+                <input
+                  id="event-search"
+                  type="search"
+                  placeholder="ابحث عن محطة أو مكان..."
+                  aria-label="ابحث في المحطات"
+                  autocomplete="off"
+                />
+              </label>
               <div class="event-list">
               </div>
+              <p id="event-search-empty" class="sidebar-empty" hidden>
+                لا توجد محطات مطابقة لبحثك.
+              </p>
              
             </aside>
           </div>
@@ -105,14 +118,11 @@
               </div>
             </div>
             <p id="event-copy">
-              تبدأ الرحلة من مكة المكرمة، المحطة الأولى في هذا المسار التعريفي.
-              تعرض الخريطة موضع مكة ثم تتيح التنقل بين أحداث السيرة ومحطاتها.
-              النص والتاريخ في هذا النموذج أوليان ويحتاجان مراجعة معرفية قبل
-              النشر.
+              في مكة المكرمة وُلد النبي ﷺ عام الفيل، وفيها نشأ وعُرف بين قومه بالصادق الأمين. وفي غار حراء المطل عليها نزل عليه الوحي أول مرة وهو في الأربعين، فبدأت الدعوة سرًّا ثم جهرًا، وصبر مع أصحابه ثلاث عشرة سنة على الأذى والحصار حتى أذن الله بالهجرة إلى المدينة.
             </p>
             <div class="event-meta">
               <span>⌖ مكة المكرمة</span
-              ><span>◷ التاريخ كما ورد في النموذج: 570م*</span
+              ><span>◷ 610م</span
               ><span>📚 راجعي المصادر المعتمدة</span>
             </div>
           </div>
@@ -203,5 +213,6 @@
     <script src="data.js"></script>
     <script src="config.js?v=20261006-2"></script>
     <script src="script.js?v=20261006-2"></script>
+    <script src="enhancements.js"></script>
   </body>
 </html>
