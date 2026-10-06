@@ -2265,3 +2265,7 @@ body.dark-theme .tech-note {
     border-color: var(--gold) !important;
     box-shadow: 0 15px 30px var(--shadow) !important;
 }
+/* إخفاء حقوق الخريطة في زاوية العرض */
+.leaflet-control-attribution {
+    display: none !important;
+}
