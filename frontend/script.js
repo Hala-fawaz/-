@@ -594,7 +594,7 @@
         const registerResponse = await fetch(`${apiBase}/api/auth/register`, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({email, password})
+          body: JSON.stringify({email, password, name: displayName})
         });
 
         const registerData = await registerResponse.json();
@@ -620,8 +620,8 @@
       localStorage.setItem(
         'risaala-user',
         JSON.stringify({
-          identifier: email,
-          name: displayName
+          identifier: loginData.email || email,
+          name: loginData.name || displayName
         })
       );
 

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from sqlalchemy import inspect, text
 
 from . import models
 from .database import Base, engine
@@ -11,6 +12,15 @@ from .routes.auth import router as auth_router
 from .routes.guide import router as guide_router
 
 Base.metadata.create_all(bind=engine)
+
+# Keep existing deployments compatible when the users table
+# was created before the optional name field existed.
+inspector = inspect(engine)
+if "users" in inspector.get_table_names():
+    user_columns = {column["name"] for column in inspector.get_columns("users")}
+    if "name" not in user_columns:
+        with engine.begin() as connection:
+            connection.execute(text("ALTER TABLE users ADD COLUMN name VARCHAR(120)"))
 
 app = FastAPI(title="Risalah AI API", version="0.1.0")
 

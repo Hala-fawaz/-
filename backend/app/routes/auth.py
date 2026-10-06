@@ -69,6 +69,7 @@ def register(request: UserRegister, db: Session = Depends(get_db)):
 
     user = User(
         email=email,
+        name=request.name.strip() or None,
         password_hash=hash_password(request.password)
     )
 
@@ -95,5 +96,7 @@ def login(request: UserLogin, db: Session = Depends(get_db)):
 
     return {
         "access_token": token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "email": user.email,
+        "name": user.name
     }

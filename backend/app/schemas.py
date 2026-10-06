@@ -4,6 +4,7 @@
 class UserRegister(BaseModel):
     email: str
     password: str
+    name: str = ""
 
 
 class UserLogin(BaseModel):
@@ -14,6 +15,7 @@ class UserLogin(BaseModel):
 class UserResponse(BaseModel):
     id: int
     email: str
+    name: str | None = None
 
     class Config:
         from_attributes = True
@@ -22,3 +24,5 @@ class UserResponse(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    email: str
+    name: str | None = None
