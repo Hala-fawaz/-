@@ -17,39 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => [...root.querySelectorAll(s)];
   let languages = [
-  ['ar','العربية'],
-  ['en','English'],
-  ['fr','Français'],
-  ['es','Español'],
-  ['de','Deutsch'],
-  ['it','Italiano'],
-  ['pt','Português'],
-  ['tr','Türkçe'],
-  ['ur','اردو'],
-  ['fa','فارسی'],
-  ['id','Bahasa Indonesia'],
-  ['ms','Bahasa Melayu'],
-  ['bn','বাংলা'],
-  ['hi','हिन्दी'],
-  ['ta','தமிழ்'],
-  ['te','తెలుగు'],
-  ['ml','മലയാളം'],
-  ['pa','ਪੰਜਾਬੀ'],
-  ['gu','ગુજરાતી'],
-  ['mr','मराठी'],
-  ['ru','Русский'],
-  ['uk','Українська'],
-  ['zh','中文'],
-  ['ja','日本語'],
-  ['ko','한국어'],
-  ['th','ไทย'],
-  ['vi','Tiếng Việt'],
-  ['nl','Nederlands'],
-  ['pl','Polski'],
-  ['sv','Svenska'],
-  ['el','Ελληνικά'],
-  ['he','עברית']
-];
+    ['ar','العربية'],['en','English'],['fr','Français'],['es','Español'],['de','Deutsch'],['it','Italiano'],['pt','Português'],['ru','Русский'],['tr','Türkçe'],['ur','اردو'],['fa','فارسی'],['hi','हिन्दी'],['bn','বাংলা'],['id','Bahasa Indonesia'],['ms','Bahasa Melayu'],['zh-CN','中文（简体）'],['zh-TW','中文（繁體）'],['ja','日本語'],['ko','한국어'],['sw','Kiswahili'],['ha','Hausa'],['yo','Yorùbá'],['ig','Igbo'],['am','አማርኛ'],['af','Afrikaans'],['sq','Shqip'],['az','Azərbaycanca'],['eu','Euskara'],['be','Беларуская'],['bg','Български'],['bs','Bosanski'],['ca','Català'],['ceb','Cebuano'],['co','Corsu'],['hr','Hrvatski'],['cs','Čeština'],['da','Dansk'],['nl','Nederlands'],['eo','Esperanto'],['et','Eesti'],['fi','Suomi'],['fy','Frysk'],['gl','Galego'],['ka','ქართული'],['el','Ελληνικά'],['gu','ગુજરાતી'],['ht','Kreyòl Ayisyen'],['haw','ʻŌlelo Hawaiʻi'],['he','עברית'],['hu','Magyar'],['is','Íslenska'],['ga','Gaeilge'],['jv','Basa Jawa'],['kn','ಕನ್ನಡ'],['kk','Қазақша'],['km','ខ្មែរ'],['rw','Ikinyarwanda'],['ku','Kurdî'],['ky','Кыргызча'],['lo','ລາວ'],['la','Latina'],['lv','Latviešu'],['lt','Lietuvių'],['lb','Lëtzebuergesch'],['mk','Македонски'],['mg','Malagasy'],['ml','മലയാളം'],['mt','Malti'],['mi','Māori'],['mr','मराठी'],['mn','Монгол'],['my','မြန်မာ'],['ne','नेपाली'],['no','Norsk'],['ny','Chichewa'],['or','ଓଡ଼ିଆ'],['ps','پښتو'],['pl','Polski'],['pa','ਪੰਜਾਬੀ'],['ro','Română'],['sm','Gagana Samoa'],['gd','Gàidhlig'],['sr','Српски'],['st','Sesotho'],['sn','chiShona'],['sd','سنڌي'],['si','සිංහල'],['sk','Slovenčina'],['sl','Slovenščina'],['so','Soomaali'],['su','Basa Sunda'],['sv','Svenska'],['tg','Тоҷикӣ'],['ta','தமிழ்'],['tt','Tatarça'],['te','తెలుగు'],['th','ไทย'],['tk','Türkmençe'],['uk','Українська'],['ug','ئۇيغۇرچە'],['uz','Oʻzbekcha'],['vi','Tiếng Việt'],['cy','Cymraeg'],['xh','isiXhosa'],['yi','ייִדיש'],['zu','isiZulu']
+  ];
   let langMap = Object.fromEntries(languages);
   const chosen = () => localStorage.getItem('risaala-language') || 'ar';
   const langSelects = [$('#language-select'), $('#settings-language')].filter(Boolean);
@@ -59,7 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
     select.value = langMap[selected] ? selected : 'ar';
   });
   renderLanguages();
-  
+  const translationKey = window.RISAALA_CONFIG?.googleTranslationApiKey || '';
+  if (translationKey) fetch(`https://translation.googleapis.com/language/translate/v2/languages?target=ar&key=${encodeURIComponent(translationKey)}`)
+    .then(response => response.ok ? response.json() : Promise.reject(response.status))
+    .then(data => { const available=data.data?.languages||[]; if(available.length){languages=available.map(item=>[item.language,item.name||item.language]);langMap=Object.fromEntries(languages);renderLanguages();} })
+    .catch(error => console.warn('Could not fetch supported language list', error));
   const english = {
     'الرئيسية':'Home','عن المشروع':'About the project','الرحلة والخريطة':'Journey & Map','المصادر':'Sources','نبذة عنا':'About us','تسجيل الدخول':'Sign in','إنشاء حساب':'Create account','حسابي':'My account','الإعدادات':'Settings','دخول':'Sign in',
     'منصة معرفية تفاعلية':'An interactive knowledge platform','رحلة في سيرة النبي ﷺ':'A Journey Through the Prophet’s Biography','اكتشف محطات الرحلة وتعرّف على الأحداث التاريخية بأسلوب تفاعلي وموثوق.':'Explore key moments and historical events through an interactive, trusted experience.','ابحث عن محطة أو موضوع...':'Search for a stop or topic...','ابدأ الرحلة':'Begin the journey','محطات، خريطة تفاعلية، ومصادر موثوقة':'Stops, an interactive map, and trusted sources','محطات الرحلة':'Journey stops','اختر محطة وابدأ الاستكشاف':'Choose a stop to explore','تعرّف على الأحداث والمواقع المرتبطة بالسيرة، وانتقل من المحطة إلى مصادرها.':'Discover events and places from the biography, then explore their sources.','بداية الرسالة':'The beginning of the message','مكة المكرمة':'Makkah','الهجرة':'The Hijrah','إلى المدينة':'To Madinah','بدر':'Badr','غزوة بدر':'The Battle of Badr','فتح مكة':'The Conquest of Makkah','المدينة':'Madinah','بناء المجتمع':'Building a community','ما لقينا محطة بهذا الاسم. جربي كلمة ثانية.':'No stops found. Try another search.','الخريطة التفاعلية':'Interactive map','شاهد المحطات على الخريطة':'See the journey on the map','تنقّل بين مكة والمدينة وبدر وغيرها، واطّلع على النبذة النصية أو استمع إليها.':'Explore Makkah, Madinah, Badr, and more. Read or listen to each summary.','استكشف الخريطة':'Explore the map','عرض توضيحي':'Preview','رحلة عبر المكان والزمن':'A journey through place and time','افتح الخريطة لاختيار الأحداث والفترة الزمنية':'Open the map to choose events and a time period','محطات مقترحة للاستكشاف':'suggested stops to explore','هدف دقة إسناد للاختبار':'target source attribution accuracy','لغة مستهدفة':'target languages',
@@ -448,30 +421,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-$('#station-search-form')?.addEventListener('submit', e => {
-  e.preventDefault();
-
-  const input = $('#station-search');
-  const query = (input?.value || '').trim().toLocaleLowerCase();
-
-  if (!query) return;
-
-  const cards = $$('[data-home-station]');
-
-  const match = cards.find(card =>
-    card.textContent.toLocaleLowerCase().includes(query)
-  );
-
-  if (match) {
-    window.location.href = match.getAttribute('href');
-    return;
-  }
-
-    
-  const empty = $('#search-empty');
-  if (empty) empty.hidden = false;
-});
-    $('#station-search')?.addEventListener('input',e=>{
+  $('#station-search-form')?.addEventListener('submit',e=>e.preventDefault());
+  $('#station-search')?.addEventListener('input',e=>{
     const query=e.target.value.trim().toLocaleLowerCase();let visible=0;
     $$('[data-home-station]').forEach(card=>{const match=card.textContent.toLocaleLowerCase().includes(query);card.hidden=!match;if(match)visible++;});
     const empty=$('#search-empty');if(empty)empty.hidden=visible>0;
@@ -520,7 +471,7 @@ $('#station-search-form')?.addEventListener('submit', e => {
     const nameWrap=$('#register-name-wrap');if(nameWrap)nameWrap.hidden=!creating;
     const nafath=$('#nafath-button');if(nafath)nafath.hidden=creating;
     const title=$('#auth-title');if(title)title.textContent=chosen()==='en'?(creating?'Create a new account':'Sign in to your account'):(creating?'إنشاء حساب جديد':'الدخول إلى حسابك');
-    const description=$('#auth-description');if(description)description.textContent=chosen()==='en'?(creating?'Enter your name and email or mobile number to create a demo account.':'Enter your email or mobile number.'):(creating?'أدخل اسمك وبريدك الإلكتروني أو رقم جوالك لإنشاء حساب جديد.':'أدخل بريدك الإلكتروني أو رقم جوالك.');
+    const description=$('#auth-description');if(description)description.textContent=chosen()==='en'?(creating?'Enter your name and email or mobile number to create a demo account.':'Enter your email or mobile number.'):(creating?'أدخل اسمك وبريدك الإلكتروني أو رقم جوالك لإنشاء حساب تجريبي.':'أدخل بريدك الإلكتروني أو رقم جوالك.');
     const submit=$('#auth-submit');if(submit)submit.textContent=chosen()==='en'?(creating?'Create account':'Sign in'):(creating?'إنشاء حساب':'تسجيل الدخول');
     const password=$('#login-password');if(password)password.autocomplete=creating?'new-password':'current-password';
     const feedback=$('#login-feedback');if(feedback)feedback.textContent='';
@@ -623,23 +574,18 @@ $('#station-search-form')?.addEventListener('submit', e => {
   })();
 
   const token = localStorage.getItem('risaala-token');
-if (user && token && $('#account-name')) {
-  $('#account-name').textContent =
-    user.name ||
-    (user.identifier.includes('@')
-      ? user.identifier.split('@')[0]
-      : '\u0639\u0636\u0648 \u0631\u0650\u0633\u0627\u0644\u0629');
 
-  const avatar = $('#account-avatar');
-  if (avatar) {
-    const shownName = $('#account-name').textContent.trim();
-    avatar.textContent = Array.from(shownName)[0] || '';
+  if (user && token && $('#account-name')) {
+    $('#account-name').textContent =
+      user.name ||
+      (user.identifier.includes('@')
+        ? user.identifier.split('@')[0]
+        : '\u0639\u0636\u0648 \u0631\u0650\u0633\u0627\u0644\u0629');
+
+    $('#account-identifier').textContent = user.identifier;
+    $('#account-login-link').hidden = true;
+    $('#logout-button').hidden = false;
   }
-
-  $('#account-identifier').textContent = user.identifier;
-  $('#account-login-link').hidden = true;
-  $('#logout-button').hidden = false;
-}
 
   $('#logout-button')?.addEventListener('click', () => {
     localStorage.removeItem('risaala-user');
