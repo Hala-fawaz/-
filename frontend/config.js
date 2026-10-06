@@ -6,5 +6,4 @@
 */
 window.RISAALA_CONFIG = {
   apiBaseUrl: 'https://risalah.onrender.com',
-  googleTranslationApiKey: ''
 };
