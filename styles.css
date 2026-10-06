@@ -318,9 +318,7 @@ input {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(90deg, #08192aef 0%, #08192acc 44%, #08192a28 100%),
-    url('https://i.postimg.cc/t4j6RcPz/earth-orbit-clean.pngv') center/cover;
+  background: linear-gradient(90deg, #08192aef 0%, #08192acc 44%, #08192a28 100%);
 }
 .hero-inner {
   position: relative;
@@ -2340,11 +2338,38 @@ body.dark-theme .tech-note {
     font-size: 13px;
 }
 
-/* Station hero without a featured image: soft solid backdrop */
+/* Station hero without a featured image: solid beige backdrop */
 .station-hero.no-image {
-    background: linear-gradient(135deg, #f6efdc, #ecdfbb);
+    background: #efe6d3; /* solid neutral beige */
     color: var(--ink);
     border-bottom: 1px solid var(--line);
 }
 .station-hero.no-image .back-map { color: #8a6a14; }
 .station-hero.no-image p { color: var(--muted); }
+
+/* Home hero: animated earth that plays once, then settles on a still frame */
+.hero-media {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+.hero-media img,
+.hero-media canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.hero-media .hero-anim {
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+.hero-media .hero-anim.playing { opacity: 1; }
+.hero:before { z-index: 1; }
+/* Keep the darker side of the overlay under the text in right-to-left pages */
+[dir="rtl"] .hero:before {
+    background: linear-gradient(270deg, #08192ad9 0%, #08192a8c 46%, #08192a14 100%);
+}
+.hero-inner,
+.hero-art { z-index: 2; }
