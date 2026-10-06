@@ -257,11 +257,74 @@ document.addEventListener('DOMContentLoaded', () => {
     $$('.station-tab').forEach(tab=>tab.classList.toggle('active',tab===button));
     $$('.station-panel').forEach(panel=>panel.hidden=panel.id!==`tab-${button.dataset.tab}`);
   }));
-  $('#station-speak')?.addEventListener('click',()=>{
-    if (localStorage.getItem('risaala-voice') === 'off') { alert('الصوت متوقف من الإعدادات.'); return; }
-    if(!('speechSynthesis' in window)){alert('ميزة القراءة الصوتية غير متاحة في هذا المتصفح.');return;}
-    speechSynthesis.cancel();const u=new SpeechSynthesisUtterance($('#station-copy')?.textContent||'');u.lang=chosen()==='ar'?'ar-SA':chosen();u.rate=.92;speechSynthesis.speak(u);
+
+
+const attachSpeechToggle = (selector, getText) => {
+  const button = $(selector);
+  if (!button) return;
+
+  const originalLabel = button.innerHTML;
+
+  button.addEventListener('click', () => {
+    if (localStorage.getItem('risaala-voice') === 'off') {
+      alert('الصوت متوقف من الإعدادات.');
+      return;
+    }
+
+    if (!('speechSynthesis' in window)) {
+      alert('ميزة القراءة الصوتية غير متاحة في هذا المتصفح.');
+      return;
+    }
+
+    const speech = window.speechSynthesis;
+
+    // إذا كان التعليق متوقفًا مؤقتًا، تابعي من مكان التوقف
+    if (speech.paused) {
+      speech.resume();
+      button.textContent = '⏸ إيقاف مؤقت';
+      return;
+    }
+
+    // إذا كان التعليق يعمل، أوقفيه مؤقتًا
+    if (speech.speaking) {
+      speech.pause();
+      button.textContent = '▶ متابعة التعليق الصوتي';
+      return;
+    }
+
+    const text = getText().trim();
+    if (!text) return;
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = chosen() === 'ar' ? 'ar-SA' : chosen();
+    utterance.rate = 0.92;
+
+    utterance.onend = () => {
+      button.innerHTML = originalLabel;
+    };
+
+    utterance.onerror = () => {
+      button.innerHTML = originalLabel;
+    };
+
+    button.innerHTML = originalLabel;
+    speech.speak(utterance);
+    button.textContent = '⏸ إيقاف مؤقت';
   });
+};
+
+// زر صفحة المحطة
+attachSpeechToggle('#station-speak', () =>
+  $('#station-copy')?.textContent || ''
+);
+
+// زر صفحة الخريطة
+attachSpeechToggle('#speak-event', () =>
+  `${$('#event-title')?.textContent || ''}. ${$('#event-copy')?.textContent || ''}`
+);
+
+
+    
   $$('.suggested-questions [data-question]').forEach(button=>button.addEventListener('click',()=>{const input=$('#guide-question');if(input)input.value=button.dataset.question;}));
   $('#guide-form')?.addEventListener('submit', async e => {
     e.preventDefault();
@@ -478,14 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
     activePeriod=e.target.value; applyMapFilters();
   });
 
-  $('#speak-event')?.addEventListener('click', () => {
-    if (localStorage.getItem('risaala-voice') === 'off') { alert('الصوت متوقف من الإعدادات.'); return; }
-    if (!('speechSynthesis' in window)) { alert('ميزة القراءة الصوتية غير متاحة في هذا المتصفح.'); return; }
-    window.speechSynthesis.cancel();
-    const text = `${$('#event-title')?.textContent || ''}. ${$('#event-copy')?.textContent || ''}`;
-    const utterance = new SpeechSynthesisUtterance(text); utterance.lang = chosen()==='ar'?'ar-SA':chosen(); utterance.rate = 0.92;
-    window.speechSynthesis.speak(utterance);
-  });
+
 
   let authMode='login';
   const setAuthMode=mode=>{
