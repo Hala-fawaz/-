@@ -1,39 +1,23 @@
+document.addEventListener('DOMContentLoaded', () => {
+    const themeBtn = document.getElementById('theme-toggle');
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    if (themeBtn) {
+        themeBtn.innerHTML = currentTheme === 'dark' ? '☀️' : '🌙';
+        themeBtn.addEventListener('click', () => {
+            let newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            themeBtn.innerHTML = newTheme === 'dark' ? '☀️' : '🌙';
+        });
+    }
+});
+
 (() => {
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => [...root.querySelectorAll(s)];
   let languages = [
-    ['ar','\u0627\u0644\u0639\u0631\u0628\u064a\u0629'],
-    ['en','English'],
-    ['fr','Fran\u00e7ais'],
-    ['es','Espa\u00f1ol'],
-    ['de','Deutsch'],
-    ['it','Italiano'],
-    ['pt','Portugu\u00eas'],
-    ['tr','T\u00fcrk\u00e7e'],
-    ['ur','\u0627\u0631\u062f\u0648'],
-    ['fa','\u0641\u0627\u0631\u0633\u06cc'],
-    ['id','Bahasa Indonesia'],
-    ['ms','Bahasa Melayu'],
-    ['bn','\u09ac\u09be\u0982\u09b2\u09be'],
-    ['hi','\u0939\u093f\u0928\u094d\u0926\u0940'],
-    ['ta','\u0ba4\u0bae\u0bbf\u0bb4\u0bcd'],
-    ['te','\u0c24\u0c46\u0c32\u0c41\u0c17\u0c41'],
-    ['ml','\u0d2e\u0d32\u0d2f\u0d3e\u0d33\u0d02'],
-    ['pa','\u0a2a\u0a70\u0a1c\u0a3e\u0a2c\u0a40'],
-    ['gu','\u0a97\u0ac1\u0a9c\u0ab0\u0abe\u0aa4\u0ac0'],
-    ['mr','\u092e\u0930\u093e\u0920\u0940'],
-    ['ru','\u0420\u0443\u0441\u0441\u043a\u0438\u0439'],
-    ['uk','\u0423\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u0430'],
-    ['zh','\u4e2d\u6587'],
-    ['ja','\u65e5\u672c\u8a9e'],
-    ['ko','\ud55c\uad6d\uc5b4'],
-    ['th','\u0e44\u0e17\u0e22'],
-    ['vi','Ti\u1ebfng Vi\u1ec7t'],
-    ['nl','Nederlands'],
-    ['pl','Polski'],
-    ['sv','Svenska'],
-    ['el','\u0395\u03bb\u03bb\u03b7\u03bd\u03b9\u03ba\u03ac'],
-    ['he','\u05e2\u05d1\u05e8\u05d9\u05ea']
+    ['ar','العربية'],['en','English'],['fr','Français'],['es','Español'],['de','Deutsch'],['it','Italiano'],['pt','Português'],['ru','Русский'],['tr','Türkçe'],['ur','اردو'],['fa','فارسی'],['hi','हिन्दी'],['bn','বাংলা'],['id','Bahasa Indonesia'],['ms','Bahasa Melayu'],['zh-CN','中文（简体）'],['zh-TW','中文（繁體）'],['ja','日本語'],['ko','한국어'],['sw','Kiswahili'],['ha','Hausa'],['yo','Yorùbá'],['ig','Igbo'],['am','አማርኛ'],['af','Afrikaans'],['sq','Shqip'],['az','Azərbaycanca'],['eu','Euskara'],['be','Беларуская'],['bg','Български'],['bs','Bosanski'],['ca','Català'],['ceb','Cebuano'],['co','Corsu'],['hr','Hrvatski'],['cs','Čeština'],['da','Dansk'],['nl','Nederlands'],['eo','Esperanto'],['et','Eesti'],['fi','Suomi'],['fy','Frysk'],['gl','Galego'],['ka','ქართული'],['el','Ελληνικά'],['gu','ગુજરાતી'],['ht','Kreyòl Ayisyen'],['haw','ʻŌlelo Hawaiʻi'],['he','עברית'],['hu','Magyar'],['is','Íslenska'],['ga','Gaeilge'],['jv','Basa Jawa'],['kn','ಕನ್ನಡ'],['kk','Қазақша'],['km','ខ្មែរ'],['rw','Ikinyarwanda'],['ku','Kurdî'],['ky','Кыргызча'],['lo','ລາວ'],['la','Latina'],['lv','Latviešu'],['lt','Lietuvių'],['lb','Lëtzebuergesch'],['mk','Македонски'],['mg','Malagasy'],['ml','മലയാളം'],['mt','Malti'],['mi','Māori'],['mr','मराठी'],['mn','Монгол'],['my','မြန်မာ'],['ne','नेपाली'],['no','Norsk'],['ny','Chichewa'],['or','ଓଡ଼ିଆ'],['ps','پښتو'],['pl','Polski'],['pa','ਪੰਜਾਬੀ'],['ro','Română'],['sm','Gagana Samoa'],['gd','Gàidhlig'],['sr','Српски'],['st','Sesotho'],['sn','chiShona'],['sd','سنڌي'],['si','සිංහල'],['sk','Slovenčina'],['sl','Slovenščina'],['so','Soomaali'],['su','Basa Sunda'],['sv','Svenska'],['tg','Тоҷикӣ'],['ta','தமிழ்'],['tt','Tatarça'],['te','తెలుగు'],['th','ไทย'],['tk','Türkmençe'],['uk','Українська'],['ug','ئۇيغۇرچە'],['uz','Oʻzbekcha'],['vi','Tiếng Việt'],['cy','Cymraeg'],['xh','isiXhosa'],['yi','ייִדיש'],['zu','isiZulu']
   ];
   let langMap = Object.fromEntries(languages);
   const chosen = () => localStorage.getItem('risaala-language') || 'ar';
@@ -44,7 +28,11 @@
     select.value = langMap[selected] ? selected : 'ar';
   });
   renderLanguages();
-  const translationKey = ''; // Legacy Google translation disabled; backend NLLB is used.
+  const translationKey = window.RISAALA_CONFIG?.googleTranslationApiKey || '';
+  if (translationKey) fetch(`https://translation.googleapis.com/language/translate/v2/languages?target=ar&key=${encodeURIComponent(translationKey)}`)
+    .then(response => response.ok ? response.json() : Promise.reject(response.status))
+    .then(data => { const available=data.data?.languages||[]; if(available.length){languages=available.map(item=>[item.language,item.name||item.language]);langMap=Object.fromEntries(languages);renderLanguages();} })
+    .catch(error => console.warn('Could not fetch supported language list', error));
   const english = {
     'الرئيسية':'Home','عن المشروع':'About the project','الرحلة والخريطة':'Journey & Map','المصادر':'Sources','نبذة عنا':'About us','تسجيل الدخول':'Sign in','إنشاء حساب':'Create account','حسابي':'My account','الإعدادات':'Settings','دخول':'Sign in',
     'منصة معرفية تفاعلية':'An interactive knowledge platform','رحلة في سيرة النبي ﷺ':'A Journey Through the Prophet’s Biography','اكتشف محطات الرحلة وتعرّف على الأحداث التاريخية بأسلوب تفاعلي وموثوق.':'Explore key moments and historical events through an interactive, trusted experience.','ابحث عن محطة أو موضوع...':'Search for a stop or topic...','ابدأ الرحلة':'Begin the journey','محطات، خريطة تفاعلية، ومصادر موثوقة':'Stops, an interactive map, and trusted sources','محطات الرحلة':'Journey stops','اختر محطة وابدأ الاستكشاف':'Choose a stop to explore','تعرّف على الأحداث والمواقع المرتبطة بالسيرة، وانتقل من المحطة إلى مصادرها.':'Discover events and places from the biography, then explore their sources.','بداية الرسالة':'The beginning of the message','مكة المكرمة':'Makkah','الهجرة':'The Hijrah','إلى المدينة':'To Madinah','بدر':'Badr','غزوة بدر':'The Battle of Badr','فتح مكة':'The Conquest of Makkah','المدينة':'Madinah','بناء المجتمع':'Building a community','ما لقينا محطة بهذا الاسم. جربي كلمة ثانية.':'No stops found. Try another search.','الخريطة التفاعلية':'Interactive map','شاهد المحطات على الخريطة':'See the journey on the map','تنقّل بين مكة والمدينة وبدر وغيرها، واطّلع على النبذة النصية أو استمع إليها.':'Explore Makkah, Madinah, Badr, and more. Read or listen to each summary.','استكشف الخريطة':'Explore the map','عرض توضيحي':'Preview','رحلة عبر المكان والزمن':'A journey through place and time','افتح الخريطة لاختيار الأحداث والفترة الزمنية':'Open the map to choose events and a time period','محطات مقترحة للاستكشاف':'suggested stops to explore','هدف دقة إسناد للاختبار':'target source attribution accuracy','لغة مستهدفة':'target languages',
@@ -60,110 +48,44 @@
   };
   const translatePage = async target => {
     const status = $('#language-status');
-    const apiBase = window.RISAALA_CONFIG?.apiBaseUrl || 'http://127.0.0.1:8000';
-
-    document.documentElement.lang = target;
-    document.documentElement.dir = ['ar','he','fa','ur'].includes(target) ? 'rtl' : 'ltr';
-
-    if (status) {
-      status.textContent = '\u062c\u0627\u0631\u064d \u062a\u0631\u062c\u0645\u0629 \u0627\u0644\u0635\u0641\u062d\u0629\u2026';
+    const key = window.RISAALA_CONFIG?.googleTranslationApiKey || '';
+    if (!key) {
+      if(target==='en') { applyEnglish(); document.documentElement.lang='en'; document.documentElement.dir='ltr'; if(status)status.textContent='English selected'; return; }
+      document.documentElement.lang=target; document.documentElement.dir=['ar','he','fa','ur','ps','yi'].includes(target)?'rtl':'ltr';
+      if (status) status.textContent = `تم اختيار ${langMap[target]||target}. لإظهار الترجمة أضيفي مفتاح Google Cloud Translation في config.js.`;
+      const feedback = $('#settings-feedback'); if (feedback) feedback.textContent = 'تم حفظ اللغة. لعرضها أضيفي مفتاح Google Cloud Translation في config.js.';
+      return;
     }
-
-    const items = [];
-
-    const walker = document.createTreeWalker(
-      document.body,
-      NodeFilter.SHOW_TEXT,
-      {
-        acceptNode(node) {
-          const value = node.nodeValue.trim();
-          if (!value || !/[\u0600-\u06FF]/.test(value)) {
-            return NodeFilter.FILTER_REJECT;
-          }
-
-          const parent = node.parentElement;
-          if (
-            !parent ||
-            parent.closest(
-              'script,style,select,textarea,.notranslate,[aria-hidden="true"],#language-status'
-            )
-          ) {
-            return NodeFilter.FILTER_REJECT;
-          }
-
-          return NodeFilter.FILTER_ACCEPT;
-        }
+    if (status) status.textContent = 'جارٍ ترجمة الصفحة…';
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        if (!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        const parent = node.parentElement;
+        if (!parent || parent.closest('script,style,select,textarea,input,button.notranslate,.notranslate,[aria-hidden="true"]')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
       }
-    );
-
-    while (walker.nextNode()) {
-      items.push({
-        type: 'text',
-        node: walker.currentNode,
-        value: walker.currentNode.nodeValue.trim()
-      });
-    }
-
-    $$('[placeholder],[aria-label],[title]').forEach(el => {
-      if (el.closest('.notranslate')) return;
-
-      ['placeholder','aria-label','title'].forEach(attr => {
-        if (!el.hasAttribute(attr)) return;
-        const value = el.getAttribute(attr)?.trim();
-        if (value && /[\u0600-\u06FF]/.test(value)) {
-          items.push({type:'attr', node:el, attr, value});
-        }
-      });
     });
-
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const originals=nodes.map(node => node.nodeValue);
     try {
-      for (let start = 0; start < items.length; start += 40) {
-        const batchItems = items.slice(start, start + 40);
-
-        const response = await fetch(`${apiBase}/api/translate-batch`, {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({
-            texts: batchItems.map(item => item.value),
-            source_language: 'ar',
-            target_language: target
-          })
+      for (let start=0; start<nodes.length; start+=80) {
+        const batch=originals.slice(start,start+80);
+        const response=await fetch(`https://translation.googleapis.com/language/translate/v2?key=${encodeURIComponent(key)}`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({q:batch,source:'ar',target,format:'text'})
         });
-
-        if (!response.ok) {
-          throw new Error(`Translation request failed (${response.status})`);
-        }
-
-        const data = await response.json();
-        const translations = data.translations || [];
-
-        batchItems.forEach((item, index) => {
-          const translated = translations[index];
-          if (!translated || !item.node?.isConnected) return;
-
-          if (item.type === 'text') {
-            item.node.nodeValue = translated;
-          } else {
-            item.node.setAttribute(item.attr, translated);
-          }
-        });
+        if(!response.ok) throw new Error(`Translation request failed (${response.status})`);
+        const data=await response.json();
+        (data.data?.translations||[]).forEach((item,i)=>{if(nodes[start+i]?.isConnected) nodes[start+i].nodeValue=item.translatedText;});
       }
-
-      if (status) {
-        status.textContent =
-          '\u062a\u0645 \u0639\u0631\u0636 \u0627\u0644\u0635\u0641\u062d\u0629 \u0628\u0644\u063a\u0629 ' +
-          (langMap[target] || target);
-      }
+      document.documentElement.lang=target;
+      document.documentElement.dir=['ar','he','fa','ur','ps','yi'].includes(target)?'rtl':'ltr';
+      if(status) status.textContent=`تم عرض الصفحة بلغة ${langMap[target]||target}`;
     } catch (error) {
       console.error(error);
-
-      if (status) {
-        status.textContent =
-          '\u062a\u0639\u0630\u0631\u062a \u0627\u0644\u062a\u0631\u062c\u0645\u0629. \u062a\u0623\u0643\u062f\u064a \u0623\u0646 \u0627\u0644\u062e\u062f\u0645\u0629 \u0627\u0644\u062e\u0644\u0641\u064a\u0629 \u062a\u0639\u0645\u0644.';
-      }
+      if(status) status.textContent='تعذرت الترجمة. تحققي من إعداد المفتاح والإنترنت وتفعيل Cloud Translation.';
     }
   };
-
   const setLanguage = code => {
     localStorage.setItem('risaala-language',code);
     langSelects.forEach(select=>select.value=code);
@@ -225,25 +147,10 @@
     $('#station-period').textContent=chosen()==='en'&&englishStops?englishStops[2]:stop.period; $('#station-location').textContent=chosen()==='en'&&englishStops?englishStops[3]:stop.location;
     $('#station-event-heading').textContent=chosen()==='en'&&englishStops?englishStops[4]:stop.heading; $('#station-copy').textContent=chosen()==='en'&&englishStops?englishStops[5]:stop.copy;
     const tag=$('.station-hero .tag'); if(tag)tag.textContent=`${chosen()==='en'?'Stop':'محطة'} · ${chosen()==='en'&&englishStops?englishStops[3]:stop.location}`;
-    if(chosen()!=='ar'&&chosen()!=='en'){
+    if(chosen()!=='ar'&&chosen()!=='en'&&translationKey){
       const fields=[$('#station-title'),$('#station-subtitle'),$('#station-period'),$('#station-location'),$('#station-event-heading'),$('#station-copy')];
       const originals=[stop.title,stop.subtitle,stop.period,stop.location,stop.heading,stop.copy];
-      const apiBase=window.RISAALA_CONFIG?.apiBaseUrl||'http://127.0.0.1:8000';
-
-      fetch(`${apiBase}/api/translate-batch`,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          texts:originals,
-          source_language:'ar',
-          target_language:chosen()
-        })
-      })
-      .then(r=>r.ok?r.json():Promise.reject(r.status))
-      .then(result=>(result.translations||[]).forEach((item,i)=>{
-        if(fields[i]&&item) fields[i].textContent=item;
-      }))
-      .catch(error=>console.warn('Could not translate station data',error));
+      fetch(`https://translation.googleapis.com/language/translate/v2?key=${encodeURIComponent(translationKey)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q:originals,source:'ar',target:chosen(),format:'text'})}).then(r=>r.ok?r.json():Promise.reject(r.status)).then(result=>(result.data?.translations||[]).forEach((item,i)=>{if(fields[i])fields[i].textContent=item.translatedText;})).catch(()=>{});
     }
   }
   $$('.station-tab').forEach(button=>button.addEventListener('click',()=>{
@@ -255,250 +162,8 @@
     if(!('speechSynthesis' in window)){alert('ميزة القراءة الصوتية غير متاحة في هذا المتصفح.');return;}
     speechSynthesis.cancel();const u=new SpeechSynthesisUtterance($('#station-copy')?.textContent||'');u.lang=chosen()==='ar'?'ar-SA':chosen();u.rate=.92;speechSynthesis.speak(u);
   });
-  async function localizeGuideUi() {
-    const lang = chosen();
-
-    if (lang === 'ar') return;
-
-    const submitButton = $('#guide-form button[type="submit"]');
-    const input = $('#guide-question');
-    const suggestionButtons = $$('.suggested-questions [data-question]');
-    const notice = $('.guide-card .guide-content > p');
-
-    const arabicVisible = [
-      "\u0625\u0631\u0633\u0627\u0644 \u2190",
-      "\u0645\u0627 \u0623\u0647\u0645\u064a\u0629 \u0645\u0643\u0629\u061f",
-      "\u0645\u0627 \u0627\u0644\u0623\u0645\u0627\u0643\u0646 \u0627\u0644\u0645\u0647\u0645\u0629\u061f",
-      "\u0645\u0627 \u0627\u0644\u0645\u0635\u0627\u062f\u0631\u061f",
-      "\u0627\u0643\u062a\u0628 \u0633\u0624\u0627\u0644\u0643 \u0647\u0646\u0627...",
-      "\u0627\u0643\u062a\u0628 \u0633\u0624\u0627\u0644\u0643",
-      "\u0627\u0644\u0645\u0631\u0634\u062f \u0645\u062a\u0635\u0644 \u0628\u0642\u0627\u0639\u062f\u0629 \u0627\u0644\u0645\u0639\u0631\u0641\u0629 \u0648\u064a\u062c\u064a\u0628 \u0627\u0639\u062a\u0645\u0627\u062f\u064b\u0627 \u0639\u0644\u0649 \u0627\u0644\u0623\u062f\u0644\u0629 \u0627\u0644\u0645\u0633\u062a\u0631\u062c\u0639\u0629 \u0645\u0646 \u0627\u0644\u0645\u0635\u0627\u062f\u0631 \u0627\u0644\u0645\u062a\u0627\u062d\u0629."
-    ];
-
-    const arabicQuestions = [
-      "\u0645\u0627 \u0623\u0647\u0645\u064a\u0629 \u0645\u0643\u0629 \u0641\u064a \u0647\u0630\u0647 \u0627\u0644\u0631\u062d\u0644\u0629\u061f",
-      "\u0645\u0627 \u0627\u0644\u0623\u0645\u0627\u0643\u0646 \u0627\u0644\u0645\u0647\u0645\u0629 \u0641\u064a \u0627\u0644\u0645\u062d\u0637\u0629\u061f",
-      "\u0645\u0627 \u0645\u0635\u0627\u062f\u0631 \u0645\u0639\u0644\u0648\u0645\u0627\u062a \u0627\u0644\u0645\u062d\u0637\u0629\u061f"
-    ];
-
-    let visible;
-    let translatedQuestions;
-
-    if (lang === 'en') {
-      visible = [
-        'Send \u2190',
-        'Why is Makkah important?',
-        'What are the important places?',
-        'What are the sources?',
-        'Type your question here...',
-        'Type your question',
-        'The guide is connected to the knowledge base and answers using evidence retrieved from the available sources.'
-      ];
-
-      translatedQuestions = [
-        'Why is Makkah important in this journey?',
-        'What are the important places in this stop?',
-        'What are the sources for this stop?'
-      ];
-    } else {
-      const apiBase = window.RISAALA_CONFIG?.apiBaseUrl || 'http://127.0.0.1:8000';
-
-      const response = await fetch(`${apiBase}/api/translate-batch`, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          texts: [...arabicVisible, ...arabicQuestions],
-          source_language: 'ar',
-          target_language: lang
-        })
-      });
-
-      if (!response.ok) throw new Error(`Translation HTTP ${response.status}`);
-
-      const data = await response.json();
-      const translations = data.translations || [];
-
-      visible = translations.slice(0, arabicVisible.length);
-      translatedQuestions = translations.slice(arabicVisible.length);
-    }
-
-    if (submitButton && visible[0]) submitButton.textContent = visible[0];
-
-    suggestionButtons.forEach((button, index) => {
-      if (visible[index + 1]) button.textContent = visible[index + 1];
-      if (translatedQuestions[index]) button.dataset.question = translatedQuestions[index];
-    });
-
-    if (input) {
-      if (visible[4]) input.placeholder = visible[4];
-      if (visible[5]) input.setAttribute('aria-label', visible[5]);
-    }
-
-    if (notice && visible[6]) notice.textContent = visible[6];
-  }
-
-  localizeGuideUi().catch(error => {
-    console.warn('Could not localize guide UI', error);
-  });
-
   $$('.suggested-questions [data-question]').forEach(button=>button.addEventListener('click',()=>{const input=$('#guide-question');if(input)input.value=button.dataset.question;}));
-  $('#guide-form')?.addEventListener('submit', async e => {
-    e.preventDefault();
-
-    const input = $('#guide-question');
-    const box = $('#guide-answer');
-    const question = input?.value.trim();
-
-    if (!box || !question) return;
-
-    const apiBase = window.RISAALA_CONFIG?.apiBaseUrl || 'http://127.0.0.1:8000';
-    const lang = chosen();
-
-    const translateTexts = async (texts, sourceLanguage, targetLanguage) => {
-      if (sourceLanguage === targetLanguage) return texts;
-
-      const response = await fetch(`${apiBase}/api/translate-batch`, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          texts,
-          source_language: sourceLanguage,
-          target_language: targetLanguage
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Translation HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.translations || texts;
-    };
-
-    let loadingText =
-      '\u062c\u0627\u0631\u064a \u0627\u0644\u0628\u062d\u062b \u0641\u064a \u0627\u0644\u0645\u0635\u0627\u062f\u0631 \u0627\u0644\u0645\u0648\u062b\u0642\u0629...';
-
-    if (lang !== 'ar') {
-      try {
-        [loadingText] = await translateTexts(
-          [loadingText],
-          'ar',
-          lang
-        );
-      } catch (error) {
-        console.warn('Could not translate loading message', error);
-      }
-    }
-
-    box.textContent = loadingText;
-    box.classList.add('show');
-
-    try {
-      let guideQuestion = question;
-
-      // If the interface is not Arabic and the user typed in that language,
-      // translate the question to Arabic before sending it to the Arabic RAG.
-      if (
-        lang !== 'ar' &&
-        !/[\u0600-\u06FF]/.test(question)
-      ) {
-        try {
-          const translatedQuestion = await translateTexts(
-            [question],
-            lang,
-            'ar'
-          );
-
-          if (translatedQuestion[0]) {
-            guideQuestion = translatedQuestion[0];
-          }
-        } catch (error) {
-          console.warn('Could not translate guide question', error);
-        }
-      }
-
-      const response = await fetch(`${apiBase}/api/guide`, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({question: guideQuestion})
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      let answerText =
-        data.answer ||
-        '\u0644\u0645 \u064a\u062a\u0645 \u0627\u0644\u0639\u062b\u0648\u0631 \u0639\u0644\u0649 \u0625\u062c\u0627\u0628\u0629.';
-
-      let sourcesLabel = '\u0627\u0644\u0645\u0635\u0627\u062f\u0631:';
-      let pageLabel = '\u0635\u0641\u062d\u0629';
-
-      if (lang !== 'ar') {
-        try {
-          const translatedUi = await translateTexts(
-            [answerText, sourcesLabel, pageLabel],
-            'ar',
-            lang
-          );
-
-          answerText = translatedUi[0] || answerText;
-          sourcesLabel = translatedUi[1] || sourcesLabel;
-          pageLabel = lang === 'en'
-            ? 'p.'
-            : (translatedUi[2] || pageLabel);
-        } catch (error) {
-          console.warn('Could not translate guide answer', error);
-        }
-      }
-
-      box.textContent = '';
-
-      const answer = document.createElement('p');
-      answer.textContent = answerText;
-      box.appendChild(answer);
-
-      if (Array.isArray(data.sources) && data.sources.length) {
-        const title = document.createElement('strong');
-        title.textContent = sourcesLabel;
-        box.appendChild(title);
-
-        const list = document.createElement('ul');
-
-        data.sources.slice(0, 5).forEach(source => {
-          const item = document.createElement('li');
-
-          const sourceName =
-            (source.source || '\u0645\u0635\u062f\u0631 \u0645\u0648\u062b\u0642')
-              .split(/[\\/]/)
-              .pop()
-              .replace(/\.txt$/i, '');
-
-          item.textContent = source.page
-            ? `${sourceName} \u2014 ${pageLabel} ${source.page}`
-            : sourceName;
-
-          list.appendChild(item);
-        });
-
-        box.appendChild(list);
-      }
-    } catch (error) {
-      console.error('Guide error:', error);
-
-      let errorText =
-        '\u062a\u0639\u0630\u0631 \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0628\u0627\u0644\u0645\u0631\u0634\u062f. \u062a\u0623\u0643\u062f\u064a \u0623\u0646 \u0627\u0644\u062e\u062f\u0645\u0629 \u0627\u0644\u062e\u0644\u0641\u064a\u0629 \u062a\u0639\u0645\u0644 \u062b\u0645 \u062d\u0627\u0648\u0644\u064a \u0645\u0631\u0629 \u0623\u062e\u0631\u0649.';
-
-      if (lang === 'en') {
-        errorText =
-          'Could not connect to the guide. Make sure the backend service is running, then try again.';
-      }
-
-      box.textContent = errorText;
-    }
-  });
+  $('#guide-form')?.addEventListener('submit',e=>{e.preventDefault();const box=$('#guide-answer');if(box){box.textContent='هذه معاينة للواجهة فقط؛ لا يتصل المرشد حاليًا بذكاء اصطناعي أو بقاعدة مصادر.';box.classList.add('show');}});
 
   $('#station-search-form')?.addEventListener('submit',e=>e.preventDefault());
   $('#station-search')?.addEventListener('input',e=>{
@@ -557,120 +222,27 @@
   };
   $$('.auth-tab').forEach(tab=>tab.addEventListener('click',()=>setAuthMode(tab.dataset.authMode)));
   if($('#login-form')&&chosen()==='en')setAuthMode('login');
-  $('#login-form')?.addEventListener('submit', async e => {
+  $('#login-form')?.addEventListener('submit', e => {
     e.preventDefault();
-
-    const email = $('#login-id').value.trim().toLowerCase();
-    const password = $('#login-password').value;
-    const displayName = $('#register-name')?.value.trim() || '';
+    const identifier = $('#login-id').value.trim(), password = $('#login-password').value;
+    const displayName=$('#register-name')?.value.trim()||'';
+    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+    const validPhone = /^\+?[\d\s().-]{8,18}$/.test(identifier);
     const feedback = $('#login-feedback');
-    const submit = $('#auth-submit');
-    const apiBase = window.RISAALA_CONFIG?.apiBaseUrl || 'http://127.0.0.1:8000';
-
-    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-    if (!validEmail) {
-      feedback.textContent = '\u0623\u062f\u062e\u0644\u064a \u0628\u0631\u064a\u062f\u064b\u0627 \u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a\u064b\u0627 \u0635\u062d\u064a\u062d\u064b\u0627.';
-      return;
-    }
-
-    if (authMode === 'register' && !displayName) {
-      feedback.textContent = '\u0623\u062f\u062e\u0644\u064a \u0627\u0633\u0645\u0643 \u0644\u0625\u0643\u0645\u0627\u0644 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u062d\u0633\u0627\u0628.';
-      return;
-    }
-
-    if (password.length < 8) {
-      feedback.textContent = '\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u064a\u062c\u0628 \u0623\u0646 \u062a\u062a\u0643\u0648\u0646 \u0645\u0646 8 \u0623\u062d\u0631\u0641 \u0639\u0644\u0649 \u0627\u0644\u0623\u0642\u0644.';
-      return;
-    }
-
-    submit.disabled = true;
-    feedback.textContent = authMode === 'register'
-      ? '\u062c\u0627\u0631\u064a \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u062d\u0633\u0627\u0628...'
-      : '\u062c\u0627\u0631\u064a \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644...';
-
-    try {
-      if (authMode === 'register') {
-        const registerResponse = await fetch(`${apiBase}/api/auth/register`, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({email, password, name: displayName})
-        });
-
-        const registerData = await registerResponse.json();
-
-        if (!registerResponse.ok) {
-          throw new Error(registerData.detail || '\u062a\u0639\u0630\u0631 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u062d\u0633\u0627\u0628.');
-        }
-      }
-
-      const loginResponse = await fetch(`${apiBase}/api/auth/login`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({email, password})
-      });
-
-      const loginData = await loginResponse.json();
-
-      if (!loginResponse.ok) {
-        throw new Error(loginData.detail || '\u062a\u0639\u0630\u0631 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644.');
-      }
-
-      localStorage.setItem('risaala-token', loginData.access_token);
-      localStorage.setItem(
-        'risaala-user',
-        JSON.stringify({
-          identifier: loginData.email || email,
-          name: loginData.name || displayName
-        })
-      );
-
-      $('#login-password').value = '';
-      location.href = 'account.html';
-
-    } catch (error) {
-      const messages = {
-        'Email is already registered.': '\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0645\u0633\u062c\u0644 \u0645\u0633\u0628\u0642\u064b\u0627.',
-        'Invalid email or password.': '\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0623\u0648 \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u063a\u064a\u0631 \u0635\u062d\u064a\u062d\u0629.',
-        'Password must be at least 8 characters.': '\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u064a\u062c\u0628 \u0623\u0646 \u062a\u062a\u0643\u0648\u0646 \u0645\u0646 8 \u0623\u062d\u0631\u0641 \u0639\u0644\u0649 \u0627\u0644\u0623\u0642\u0644.'
-      };
-
-      feedback.textContent =
-        messages[error.message] ||
-        error.message ||
-        '\u062d\u062f\u062b \u062e\u0637\u0623 \u0641\u064a \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0628\u0627\u0644\u062e\u0627\u062f\u0645.';
-    } finally {
-      submit.disabled = false;
-    }
+    if (!validEmail && !validPhone) { feedback.textContent = 'أدخلي بريدًا إلكترونيًا صحيحًا أو رقم جوال صالحًا.'; return; }
+    if (authMode==='register'&&!displayName) { feedback.textContent = 'أدخلي اسمك لإكمال إنشاء الحساب.'; return; }
+    if (password.length < 4) { feedback.textContent = 'كلمة المرور يجب أن تتكون من 4 أحرف على الأقل للمعاينة.'; return; }
+    localStorage.setItem('risaala-user', JSON.stringify({ identifier, name:displayName }));
+    $('#login-password').value = '';
+    location.href = 'account.html';
   });
-
-  const user = (() => {
-    try {
-      return JSON.parse(localStorage.getItem('risaala-user'));
-    } catch {
-      return null;
-    }
-  })();
-
-  const token = localStorage.getItem('risaala-token');
-
-  if (user && token && $('#account-name')) {
-    $('#account-name').textContent =
-      user.name ||
-      (user.identifier.includes('@')
-        ? user.identifier.split('@')[0]
-        : '\u0639\u0636\u0648 \u0631\u0650\u0633\u0627\u0644\u0629');
-
+  const user = (() => { try { return JSON.parse(localStorage.getItem('risaala-user')); } catch { return null; } })();
+  if (user && $('#account-name')) {
+    $('#account-name').textContent = user.name || (user.identifier.includes('@') ? user.identifier.split('@')[0] : 'عضو رِسالة');
     $('#account-identifier').textContent = user.identifier;
-    $('#account-login-link').hidden = true;
-    $('#logout-button').hidden = false;
+    $('#account-login-link').hidden = true; $('#logout-button').hidden = false;
   }
-
-  $('#logout-button')?.addEventListener('click', () => {
-    localStorage.removeItem('risaala-user');
-    localStorage.removeItem('risaala-token');
-    location.reload();
-  });
+  $('#logout-button')?.addEventListener('click', () => { localStorage.removeItem('risaala-user'); location.reload(); });
 
   const settingsLang = $('#settings-language');
   if (settingsLang) settingsLang.value = chosen();
@@ -690,3 +262,216 @@
   });
   if (localStorage.getItem('risaala-reduced-motion') === 'on') document.documentElement.classList.add('reduce-motion');
 })();
+
+document.addEventListener('DOMContentLoaded', function() {
+    const mapContainer = document.getElementById('gis-map');
+    if (!mapContainer || typeof L === 'undefined' || !window.JOURNEY_DATA) return;
+
+    window.JOURNEY_DATA.sort((a, b) => a.num - b.num);
+
+    const map = L.map('gis-map').setView([23.8859, 39.1925], 6);
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri',
+        maxZoom: 18
+    }).addTo(map);
+
+    const FullscreenControl = L.Control.extend({
+        options: { position: 'topleft' },
+        onAdd: function(map) {
+            const btn = L.DomUtil.create('a', 'leaflet-control-fullscreen');
+            btn.innerHTML = '⛶'; btn.title = "ملء الشاشة";
+            btn.onclick = function(e) { e.preventDefault(); mapContainer.classList.toggle('fullscreen-map'); setTimeout(() => map.invalidateSize(), 300); };
+            return btn;
+        }
+    });
+    map.addControl(new FullscreenControl());
+
+    const eventList = document.querySelector('.event-list');
+    let markers = [];
+    let sidebarBtns = [];
+    let currentLine = null;
+    let prevCoords = null;
+
+    function renderEvents(filterCategory) {
+        // Clear existing map markers, paths, and sidebar
+        markers.forEach(m => map.removeLayer(m));
+        markers = [];
+        sidebarBtns = [];
+        if (eventList) eventList.innerHTML = '';
+        if (currentLine) map.removeLayer(currentLine);
+        prevCoords = null;
+
+        const groups = {};
+
+        // 1. Group the events based on the selected filter
+        window.JOURNEY_DATA.forEach(event => {
+            // Battles filter logic
+            const isBattle = event.title.match(/(غزوة|معركة|فتح|حصار|سرية)/);
+            if (filterCategory === 'battles' && !isBattle) return;
+
+            // Determine Group Key and Title
+            let groupKey, groupTitle;
+            if (filterCategory === 'location') {
+                groupKey = event.location;
+                groupTitle = `📍 ${event.location}`;
+            } else {
+                // 'timeline', 'all', or 'battles' standard eras
+                if (event.num <= 32) { groupKey = 'makkah'; groupTitle = 'العهد المكي'; }
+                else if (event.num <= 48) { groupKey = 'madinah'; groupTitle = 'العهد المدني'; }
+                else { groupKey = 'caliphs'; groupTitle = 'عهد الخلفاء الراشدين'; }
+            }
+
+            if (!groups[groupKey]) {
+                groups[groupKey] = { title: groupTitle, events: [] };
+            }
+
+            // Create Map Marker
+            const customIcon = L.divIcon({
+                className: 'custom-map-pin',
+                html: `<div style="background:var(--ink); color:white; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--gold); font-weight:bold; box-shadow:0 4px 8px rgba(0,0,0,0.3); font-size:12px;">${event.num}</div>`,
+                iconSize: [28, 28], iconAnchor: [14, 14]
+            });
+
+            const marker = L.marker([event.lat, event.lng], { icon: customIcon }).addTo(map);
+            markers.push(marker);
+
+            const popupContent = `
+                <div class="popup-title">${event.num}. ${event.title}</div>
+                <div class="popup-meta"><span>📍 ${event.location}</span><span>📅 ${event.date}</span></div>
+                <div class="popup-summary">${event.summary}</div>
+                <a href="${event.url}" class="popup-btn">انتقل إلى التفاصيل ←</a>
+            `;
+            marker.bindPopup(popupContent);
+
+            groups[groupKey].events.push({ event, marker });
+        });
+
+        // 2. Build the Sidebar Accordions
+        if (eventList) {
+            for (const [key, group] of Object.entries(groups)) {
+                if (group.events.length === 0) continue;
+
+                const detailsEl = document.createElement('details');
+                detailsEl.className = 'sidebar-group';
+                
+                // Keep the first group open by default for a clean, uncluttered look
+                if (Object.keys(groups)[0] === key || filterCategory === 'location') detailsEl.open = true;
+
+                const summaryEl = document.createElement('summary');
+                summaryEl.innerText = group.title;
+                detailsEl.appendChild(summaryEl);
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'group-content';
+
+                group.events.forEach(item => {
+                    const { event, marker } = item;
+                    const btn = document.createElement('button');
+                    btn.className = 'event-row';
+                    btn.innerHTML = `<span class="event-icon" style="font-size:16px;">${event.icon}</span><span style="text-align:right;"><strong>${event.num}. ${event.title}</strong><small>${event.location} · ${event.date}</small></span><span style="color:var(--gold);">‹</span>`;
+                    
+                    const triggerInteraction = () => {
+                        sidebarBtns.forEach(el => el.classList.remove('selected'));
+                        btn.classList.add('selected');
+
+                        // Update Info Card
+                        const titleEl = document.getElementById('event-title');
+                        const copyEl = document.getElementById('event-copy');
+                        const linkEl = document.getElementById('station-page-link');
+                        const metaEl = document.querySelector('.event-meta');
+
+                        if(titleEl) titleEl.innerText = `${event.title}`;
+                        if(copyEl) copyEl.innerText = event.summary;
+                        if(linkEl) { linkEl.href = event.url; linkEl.innerText = "انتقل إلى صفحة الحدث ←"; }
+                        if(metaEl) metaEl.innerHTML = `<span>⌖ ${event.location}</span><span>◷ ${event.date}</span><span>📚 موثق من المصادر</span>`;
+
+                        // Animated Line Logic
+                        const currCoords = [event.lat, event.lng];
+                        if (prevCoords && (prevCoords[0] !== currCoords[0] || prevCoords[1] !== currCoords[1])) {
+                            if (currentLine) map.removeLayer(currentLine);
+                            currentLine = L.polyline([prevCoords, currCoords], { color: '#e4d4a5', weight: 4, className: 'animated-route' }).addTo(map);
+                        }
+                        prevCoords = currCoords;
+
+                        map.flyTo(currCoords, 10, { duration: 1.5 });
+                        marker.openPopup();
+                    };
+
+                    btn.addEventListener('click', triggerInteraction);
+                    marker.on('click', triggerInteraction);
+                    contentDiv.appendChild(btn);
+                    sidebarBtns.push(btn);
+                });
+
+                detailsEl.appendChild(contentDiv);
+                eventList.appendChild(detailsEl);
+            }
+        }
+    }
+
+    // Initialize with all events
+    renderEvents('all');
+
+    // Filter Buttons Logic
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            e.target.classList.add('active');
+            renderEvents(e.target.dataset.filter);
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (!window.JOURNEY_DATA) return;
+    
+    // Check if we are on the station page by looking for the URL param
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventId = urlParams.get('event');
+    if (!eventId) return;
+
+    // Keep the stations in chronological order so previous/next follow the sequence
+    window.JOURNEY_DATA.sort((a, b) => a.num - b.num);
+
+    // Find the event in the database (the URL param may hold the id or the number)
+    const eventIndex = window.JOURNEY_DATA.findIndex(e => String(e.id) === eventId || String(e.num) === eventId);
+    const eventData = window.JOURNEY_DATA[eventIndex];
+    if (eventData) {
+        // Update DOM elements dynamically
+        const titleEl = document.getElementById('station-title');
+        const subtitleEl = document.getElementById('station-subtitle');
+        const heroSec = document.getElementById('station-hero-section');
+        const locEl = document.getElementById('station-location');
+        const periodEl = document.getElementById('station-period');
+        const copyEl = document.getElementById('station-copy');
+        const photoEl = document.querySelector('.station-photo');
+        const eventHeadingEl = document.getElementById('station-event-heading');
+
+        if (titleEl) titleEl.textContent = eventData.title;
+        if (subtitleEl) subtitleEl.textContent = eventData.location;
+        if (eventHeadingEl) eventHeadingEl.textContent = `${eventData.title} · ${eventData.location}`;
+        if (locEl) locEl.textContent = eventData.location;
+        if (periodEl) periodEl.textContent = eventData.date;
+        if (copyEl) copyEl.textContent = eventData.summary;
+        if (photoEl) photoEl.src = eventData.image; // Updates the body image
+        
+        // Update the top banner background with the real image dynamically
+        if (heroSec) {
+            heroSec.style.backgroundImage = `linear-gradient(110deg, #102945ee, #1029459c), url('${eventData.image}')`;
+            heroSec.style.backgroundPosition = 'center';
+            heroSec.style.backgroundSize = 'cover';
+        }
+
+        // Pagination: link to the neighbouring stations in numerical order
+        const setStationLink = (el, target, label) => {
+            if (!el) return;
+            if (!target) { el.style.visibility = 'hidden'; return; }
+            el.href = target.url;
+            el.textContent = label(target);
+            el.style.visibility = 'visible';
+        };
+        setStationLink(document.getElementById('prev-station'), window.JOURNEY_DATA[eventIndex - 1], t => `← السابق: ${t.title}`);
+        setStationLink(document.getElementById('next-station'), window.JOURNEY_DATA[eventIndex + 1], t => `التالي: ${t.title} →`);
+    }
+});
