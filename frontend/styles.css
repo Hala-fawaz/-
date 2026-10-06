@@ -1940,6 +1940,8 @@ body.dark-theme .auth-tab.active {
 .tech-python {
   background: #e9f0f9;
   color: #3670a3;
+font: 7000 21px "Readex Pro";
+
 }
 .tech-postgres {
   background: #eaf1f5;
@@ -1953,6 +1955,8 @@ body.dark-theme .auth-tab.active {
 .tech-openai {
   background: #eaf3ef;
   color: #477e72;
+    font: 7000 21px "Readex Pro";
+
 }
 .tech-card strong {
   font: 600 13px "Readex Pro";
