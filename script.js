@@ -50,6 +50,7 @@ let languages = [
   ['el','Ελληνικά'],
   ['he','עברית']
 ];
+    
   let langMap = Object.fromEntries(languages);
   const chosen = () => localStorage.getItem('risaala-language') || 'ar';
   const langSelects = [$('#language-select'), $('#settings-language')].filter(Boolean);
