@@ -133,6 +133,7 @@ input {
   font-size: 13px;
   letter-spacing: 0.04em;
 }
+
 .title {
   font:
     600 clamp(32px, 5vw, 55px)/1.25 "Readex Pro",
