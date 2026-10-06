@@ -574,18 +574,23 @@ document.addEventListener('DOMContentLoaded', () => {
   })();
 
   const token = localStorage.getItem('risaala-token');
+if (user && token && $('#account-name')) {
+  $('#account-name').textContent =
+    user.name ||
+    (user.identifier.includes('@')
+      ? user.identifier.split('@')[0]
+      : '\u0639\u0636\u0648 \u0631\u0650\u0633\u0627\u0644\u0629');
 
-  if (user && token && $('#account-name')) {
-    $('#account-name').textContent =
-      user.name ||
-      (user.identifier.includes('@')
-        ? user.identifier.split('@')[0]
-        : '\u0639\u0636\u0648 \u0631\u0650\u0633\u0627\u0644\u0629');
-
-    $('#account-identifier').textContent = user.identifier;
-    $('#account-login-link').hidden = true;
-    $('#logout-button').hidden = false;
+  const avatar = $('#account-avatar');
+  if (avatar) {
+    const shownName = $('#account-name').textContent.trim();
+    avatar.textContent = Array.from(shownName)[0] || '';
   }
+
+  $('#account-identifier').textContent = user.identifier;
+  $('#account-login-link').hidden = true;
+  $('#logout-button').hidden = false;
+}
 
   $('#logout-button')?.addEventListener('click', () => {
     localStorage.removeItem('risaala-user');
