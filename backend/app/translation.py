@@ -1,4 +1,5 @@
 import os
+import json
 import re
 from pathlib import Path
 
@@ -250,28 +251,120 @@ def translate_text(
     }
 
 
+def _translate_batch_once(
+    texts: list[str],
+    source_language: str,
+    target_language: str,
+) -> list[str]:
+    if source_language == target_language:
+        return texts
+
+    source_name = _language_name(source_language)
+    target_name = _language_name(target_language)
+
+    system_prompt = f"""
+You are a precise translation engine.
+
+Translate every item from {source_name} ({source_language})
+to {target_name} ({target_language}).
+
+Rules:
+- Return ONLY valid JSON.
+- Use exactly this shape: {{"translations": ["...", "..."]}}
+- Keep exactly the same number of items and the same order.
+- Do not omit, merge, explain, number, or comment on any item.
+- Preserve names, numbers, punctuation, URLs, placeholders and code-like tokens.
+- Keep the natural style of the target language.
+""".strip()
+
+    response = _get_client().chat.completions.create(
+        model=MODEL_NAME,
+        messages=[
+            {
+                "role": "system",
+                "content": system_prompt,
+            },
+            {
+                "role": "user",
+                "content": json.dumps(texts, ensure_ascii=False),
+            },
+        ],
+        temperature=0,
+        max_tokens=4000,
+    )
+
+    raw = (response.choices[0].message.content or "").strip()
+
+    if raw.startswith("```"):
+        raw = re.sub(r"^```(?:json)?\s*", "", raw, flags=re.I)
+        raw = re.sub(r"\s*```$", "", raw)
+
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        match = re.search(r'\{.*\}', raw, flags=re.S)
+        if not match:
+            raise RuntimeError("Translation model returned invalid batch JSON.")
+        data = json.loads(match.group(0))
+
+    translations = data.get("translations")
+
+    if not isinstance(translations, list) or len(translations) != len(texts):
+        raise RuntimeError(
+            "Translation model returned an invalid number of translations."
+        )
+
+    return [_clean_translation(str(item)) for item in translations]
+
+
 def translate_texts(
     texts: list[str],
     source_language: str,
     target_language: str,
-    batch_size: int = 8,
+    batch_size: int = 20,
 ):
-    source_language = _short_code(
-        source_language
-    )
+    source_language = _short_code(source_language)
+    target_language = _short_code(target_language)
 
-    target_language = _short_code(
-        target_language
-    )
+    cleaned_texts = [(text or "").strip() for text in texts]
+    translations = [""] * len(cleaned_texts)
 
-    translations = [
-        translate_text(
-            text=text,
-            source_language=source_language,
-            target_language=target_language,
-        )["translation"]
-        for text in texts
-    ]
+    pending_indices = []
+
+    for index, text in enumerate(cleaned_texts):
+        if not text:
+            continue
+
+        cache_key = (
+            source_language,
+            target_language,
+            text,
+        )
+
+        if cache_key in _TRANSLATION_CACHE:
+            translations[index] = _TRANSLATION_CACHE[cache_key]
+        else:
+            pending_indices.append(index)
+
+    for offset in range(0, len(pending_indices), batch_size):
+        batch_indices = pending_indices[offset:offset + batch_size]
+        batch_texts = [cleaned_texts[index] for index in batch_indices]
+
+        batch_translations = _translate_batch_once(
+            batch_texts,
+            source_language,
+            target_language,
+        )
+
+        for index, translated in zip(batch_indices, batch_translations):
+            translations[index] = translated
+
+            cache_key = (
+                source_language,
+                target_language,
+                cleaned_texts[index],
+            )
+            _TRANSLATION_CACHE[cache_key] = translated
 
     return {
         "translations": translations,
@@ -279,3 +372,4 @@ def translate_texts(
         "target_language": target_language,
         "model": f"groq:{MODEL_NAME}",
     }
+
