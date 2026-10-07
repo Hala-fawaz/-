@@ -401,10 +401,24 @@ attachSpeechToggle('#speak-event', () =>
         }
       }
 
+      // Tell the guide which station page the visitor is on, so a question
+      // like «ما الأماكن المهمة في المحطة؟» knows what «المحطة» means.
+      const stationId = new URLSearchParams(location.search).get('event');
+      const stationEvent = (window.JOURNEY_DATA || []).find(
+        e => String(e.id) === stationId || String(e.num) === stationId
+      );
+      const stationTitle = stationEvent
+        ? [stationEvent.title, stationEvent.location].filter(Boolean).join(' — ')
+        : ($('#station-title')?.textContent || '').trim();
+      const guidePayload = {question: guideQuestion};
+      if (stationTitle && /[ء-ي]/.test(stationTitle)) {
+        guidePayload.station = stationTitle;
+      }
+
       const response = await fetch(`${apiBase}/api/guide`, {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({question: guideQuestion})
+        body: JSON.stringify(guidePayload)
       });
 
       if (!response.ok) {
