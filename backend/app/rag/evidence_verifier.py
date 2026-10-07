@@ -1,19 +1,13 @@
-import os
+"""LLM check that candidate sentences answer the question (not used by /api/guide).
+
+Kept for older callers. It now shares the guide's model client and the
+tolerant reply parser: a reply it cannot read keeps the candidates
+instead of discarding them.
+"""
+
 import re
-from pathlib import Path
 
-from dotenv import load_dotenv
-from groq import Groq
-
-
-BACKEND_DIR = Path(__file__).resolve().parents[2]
-load_dotenv(BACKEND_DIR / ".env")
-
-MODEL_NAME = "allam-2-7b"
-
-client = Groq(
-    api_key=os.getenv("GROQ_API_KEY")
-)
+from .llm import complete, parse_accept_ids
 
 
 def _normalize_arabic(text: str) -> str:
@@ -192,33 +186,21 @@ EVIDENCE ITEMS:
 {evidence}
 """.strip()
 
-    response = client.chat.completions.create(
-        model=MODEL_NAME,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-        temperature=0,
-        max_tokens=40,
-    )
+    try:
+        output = complete(
+            [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            answer_tokens=80,
+        ).text
+    except Exception:
+        return candidates
 
-    output = (response.choices[0].message.content or "").strip()
+    accepted_ids = parse_accept_ids(output, len(candidates))
 
-    match = re.search(r"ACCEPT\s*:\s*([^\n]+)", output, flags=re.I)
-
-    if not match:
-        return []
-
-    value = match.group(1).strip()
-
-    if value.upper().startswith("NONE"):
-        return []
-
-    accepted_ids = {
-        int(number)
-        for number in re.findall(r"\d+", value)
-        if 1 <= int(number) <= len(candidates)
-    }
+    if accepted_ids is None:
+        return candidates
 
     return [
         item

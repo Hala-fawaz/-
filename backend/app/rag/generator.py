@@ -1,125 +1,202 @@
-import os
+"""Write the guide's answer from the retrieved passages.
+
+The model plays «راوي رِسالة»: a narrator of the seerah who answers only
+from the numbered passages, cites them as [n], and never recites a
+verse or hadith from memory. After generation the answer is checked in
+code:
+- quoted text («...») must appear in the passages, otherwise the
+  sentence is dropped (a misquoted verse is the worst possible error);
+- the [n] citations decide which sources are shown under the answer,
+  and are then removed from the visible text;
+- Markdown symbols and half-finished last sentences are cleaned up.
+"""
+
 import re
-from pathlib import Path
+from dataclasses import dataclass, field
 
-from dotenv import load_dotenv
-from groq import Groq
-
-from .semantic_reranker import _question_type
-
-
-BACKEND_DIR = Path(__file__).resolve().parents[2]
-load_dotenv(BACKEND_DIR / ".env")
-
-MODEL_NAME = "allam-2-7b"
-
-client = Groq(
-    api_key=os.getenv("GROQ_API_KEY")
-)
-
-INSUFFICIENT_ANSWER = "\u0644\u0645 \u0623\u062c\u062f \u0641\u064a \u0627\u0644\u0645\u0635\u0627\u062f\u0631 \u0627\u0644\u0645\u062a\u0627\u062d\u0629 \u062f\u0644\u064a\u0644\u064b\u0627 \u0643\u0627\u0641\u064a\u064b\u0627 \u0644\u0644\u0625\u062c\u0627\u0628\u0629 \u0639\u0646 \u0647\u0630\u0627 \u0627\u0644\u0633\u0624\u0627\u0644."
+from .arabic_text import normalize, remove_diacritics
+from .llm import Completion, complete
+from .llm_options import model_profile
 
 
-def _clean_answer(answer: str) -> str:
-    answer = (answer or "").strip()
+INSUFFICIENT_ANSWER = "لم أجد في المصادر المتاحة دليلًا كافيًا للإجابة عن هذا السؤال."
+# Any reply that starts like the abstention sentence («لم أجد...») is one.
+ABSTAIN_START = normalize("لم أجد")
 
-    source_labels = (
-        "\u0627\u0644\u0645\u0635\u0627\u062f\u0631",
-        "\u0627\u0644\u0645\u0631\u0627\u062c\u0639",
-        "\u0627\u0644\u0645\u0635\u0627\u062f\u0631 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u0629",
-    )
+SYSTEM_PROMPT = """أنت «راوي رِسالة»، المرشد المعرفي في منصة رِسالة للسيرة النبوية. تجيب الزوار بالعربية الفصحى السهلة، بأسلوب راوٍ متمكن للسيرة: تسرد الأحداث بترتيبها، وتربط أسبابها بنتائجها، وتتحدث عن النبي ﷺ وأصحابه رضي الله عنهم بأدب ووقار.
 
-    for label in source_labels:
-        marker = "\n" + label
-        if marker in answer:
-            answer = answer.split(marker, 1)[0]
+قواعد لا تخالفها:
+1. مصدرك الوحيد هو المقاطع المرقمة في رسالة الزائر. لا تضف اسمًا أو تاريخًا أو عددًا أو حدثًا ليس فيها، حتى لو كنت تعرفه.
+2. ضع بعد كل جملة فيها معلومة رقم المقطع الذي أخذتها منه بين معقوفين، مثل [2] أو [1][3].
+3. لا تكتب نص آية أو حديث من حفظك. إن احتجت إلى آية أو حديث فانقله بلفظه من المقاطع بين علامتي « »، وإلا فاذكر معناه دون علامات تنصيص.
+4. إذا اختلفت المقاطع في رواية أو تاريخ أو عدد فاذكر الأقوال كما وردت، ولا ترجّح من عندك.
+5. افصل بين الرواية والتأمل: العبرة أو الدرس جملة قصيرة في آخر الإجابة، مبنية على ما في المقاطع.
+6. إذا لم تجب المقاطع عن السؤال فاكتب هذه الجملة وحدها: لم أجد في المصادر المتاحة دليلًا كافيًا للإجابة عن هذا السؤال.
+7. لا تُفتِ ولا تُصدر أحكامًا شرعية، وإن سُئلت عن حكم فوجّه السائل إلى أهل العلم.
+8. اكتب نصًا عاديًا بلا تنسيق Markdown (لا نجوم ولا عناوين)، وافصل الفقرات بسطر فارغ.
+9. لا تذكر أرقام الصفحات، ولا تقل «حسب المقاطع» أو «بناءً على النصوص»؛ ابدأ بالجواب مباشرة."""
 
-    answer = re.sub(r"\s+", " ", answer).strip()
+MODE_HINTS = {
+    "brief": "إجابة مباشرة موجزة في جملة إلى ثلاث جمل، تبدأ بالمعلومة المسؤول عنها.",
+    "narrative": (
+        "سرد قصصي مترابط في فقرتين إلى أربع فقرات قصيرة: السياق أولًا، ثم الأحداث بترتيبها، "
+        "ثم عبرة موجزة إن دلّت عليها المقاطع."
+    ),
+    "general": "إجابة واضحة في فقرة أو فقرتين.",
+}
 
-    if not answer:
-        return INSUFFICIENT_ANSWER
+_CITATION_RE = re.compile(r"\s*\[(\d{1,2}(?:\s*[,،و]\s*\d{1,2})*)\]")
+_QUOTE_RE = re.compile(r"«([^»]{8,})»|\"([^\"]{8,})\"|“([^”]{8,})”|﴿([^﴾]{8,})﴾|\{([^}]{8,})\}")
+_SENTENCE_RE = re.compile(r"(?<=[.!?؟])\s+")
+_THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
+_PUNCT_RE = re.compile(r"[^\w\s]")
 
-    return answer
+
+@dataclass
+class ComposedAnswer:
+    text: str
+    cited: list[int] = field(default_factory=list)  # 1-based evidence numbers, in order of use
+    model: str | None = None
+    insufficient: bool = False
+
+
+def _evidence_block(index: int, item: dict) -> str:
+    label = item.get("title") or item.get("source") or "مصدر"
+    if item.get("page"):
+        label += f"، ص {item['page']}"
+    if item.get("heading"):
+        label += f" \N{EM DASH} {item['heading']}"
+    text = remove_diacritics(item.get("text") or item.get("snippet") or "").strip()
+    return f"[{index}] {label}\n{text}"
+
+
+def fit_evidence(evidence: list[dict], model: str) -> list[dict]:
+    """The passages that fit this model's context window, best first."""
+    profile = model_profile(model)
+    chosen, used = [], 0
+    for item in evidence[: profile.max_passages]:
+        size = len(item.get("text") or "")
+        if chosen and used + size > profile.evidence_chars:
+            break
+        chosen.append(item)
+        used += size
+    return chosen
+
+
+def build_messages(question: str, evidence: list[dict], mode: str, station: str | None) -> list[dict]:
+    lines = [f"سؤال الزائر: {question.strip()}"]
+    if station:
+        lines.append(f"الزائر يتصفح الآن صفحة محطة: {station.strip()} (إذا قال «المحطة» أو «هنا» فهذه هي المقصودة).")
+    lines.append(f"المطلوب: {MODE_HINTS.get(mode, MODE_HINTS['general'])}")
+    lines.append("")
+    lines.append("المقاطع:")
+    lines.append("\n\n".join(_evidence_block(i, item) for i, item in enumerate(evidence, 1)))
+    lines.append("")
+    lines.append("اكتب الإجابة الآن مع أرقام المقاطع بين معقوفين بعد كل معلومة.")
+    return [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": "\n".join(lines)},
+    ]
+
+
+def _comparable(text: str) -> str:
+    return " ".join(_PUNCT_RE.sub(" ", normalize(text)).split())
+
+
+def _quotes_are_grounded(sentence: str, evidence_text: str) -> bool:
+    for match in _QUOTE_RE.finditer(sentence):
+        quoted = next(group for group in match.groups() if group)
+        if len(quoted.split()) < 4:
+            continue
+        if _comparable(quoted) not in evidence_text:
+            return False
+    return True
+
+
+def _strip_markdown(text: str) -> str:
+    text = _THINK_RE.sub("", text)
+    text = re.sub(r"\*\*|__|`", "", text)
+    text = re.sub(r"(?m)^\s{0,3}#{1,6}\s*", "", text)
+    text = re.sub(r"(?m)^\s*[\*•]\s+", "- ", text)
+    return text.strip()
+
+
+def _trim_incomplete(text: str) -> str:
+    last = max(text.rfind(mark) for mark in (".", "!", "؟", "?"))
+    return text[: last + 1] if last != -1 else text
+
+
+def finalize_answer(raw: str, evidence: list[dict], finish_reason: str | None = None) -> ComposedAnswer:
+    text = _strip_markdown(raw or "")
+
+    if finish_reason == "length":
+        text = _trim_incomplete(text)
+
+    if not text or normalize(text).startswith(ABSTAIN_START):
+        return ComposedAnswer(INSUFFICIENT_ANSWER, insufficient=True)
+
+    evidence_text = _comparable(" ".join(item.get("text") or "" for item in evidence))
+    cited: list[int] = []
+    paragraphs = []
+
+    for paragraph in re.split(r"\n\s*\n", text):
+        kept = []
+        for sentence in _SENTENCE_RE.split(paragraph.strip()):
+            sentence = sentence.strip()
+            if not sentence:
+                continue
+            # The abstention sentence appended after a real answer.
+            if normalize(sentence).startswith(ABSTAIN_START):
+                continue
+            if not _quotes_are_grounded(sentence, evidence_text):
+                continue
+            for group in _CITATION_RE.findall(sentence):
+                for number in re.findall(r"\d+", group):
+                    number = int(number)
+                    if 1 <= number <= len(evidence) and number not in cited:
+                        cited.append(number)
+            clean = _CITATION_RE.sub("", sentence)
+            clean = re.sub(r"\s+([.،,!?؟:؛])", r"\1", clean).strip()
+            if clean:
+                kept.append(clean)
+        if kept:
+            paragraphs.append(" ".join(kept))
+
+    if not paragraphs:
+        return ComposedAnswer(INSUFFICIENT_ANSWER, insufficient=True)
+
+    return ComposedAnswer("\n\n".join(paragraphs), cited=cited)
+
+
+def compose_answer(
+    question: str,
+    evidence: list[dict],
+    mode: str = "general",
+    station: str | None = None,
+) -> ComposedAnswer:
+    """Ask the model, then clean and check its answer.
+
+    Raises llm.LLMUnavailable when no model can be reached.
+    """
+    if not evidence:
+        return ComposedAnswer(INSUFFICIENT_ANSWER, insufficient=True)
+
+    used: dict[str, list[dict]] = {}
+
+    def messages_for(model: str) -> list[dict]:
+        used[model] = fit_evidence(evidence, model)
+        return build_messages(question, used[model], mode, station)
+
+    def answer_tokens(model: str) -> int:
+        profile = model_profile(model)
+        return profile.brief_tokens if mode == "brief" else profile.narrative_tokens
+
+    completion: Completion = complete(messages_for, answer_tokens=answer_tokens, temperature=0.2)
+    result = finalize_answer(completion.text, used[completion.model], completion.finish_reason)
+    result.model = completion.model
+    return result
 
 
 def generate_answer(question: str, sources: list[dict]) -> str:
-    if not sources:
-        return INSUFFICIENT_ANSWER
-
-    # For factual typed questions, preserve the strongest verified
-    # evidence verbatim instead of letting the language model
-    # introduce a different person, place, date, or number.
-    question_kind = _question_type(question)
-
-    if question_kind != "general":
-        for source in sources:
-            text = (
-                source.get("snippet")
-                or source.get("text")
-                or ""
-            ).strip()
-
-            if text:
-                return _clean_answer(text)
-
-        return INSUFFICIENT_ANSWER
-
-    context_parts = []
-
-    for i, source in enumerate(sources[:4], 1):
-        text = source.get("snippet") or source.get("text", "")
-        text = text.replace("[", "").replace("]", "").strip()
-
-        if not text:
-            continue
-
-        context_parts.append(
-            f"EVIDENCE {i}:\n{text}"
-        )
-
-    if not context_parts:
-        return INSUFFICIENT_ANSWER
-
-    context = "\n\n".join(context_parts)
-
-    system_prompt = """
-You are the grounded knowledge guide for the Risalah platform.
-
-Answer the user's Arabic question ONLY from the supplied evidence.
-
-Mandatory rules:
-1. Do not use outside knowledge, memory, assumptions, calculations, or guessed facts.
-2. Every factual statement in the answer must be directly supported by the supplied evidence.
-3. Answer the exact question directly and concisely, normally in one to three Arabic sentences.
-4. Do not copy footnotes, bibliographies, reference numbers, editorial notes, or unrelated surrounding text.
-5. Do not mention a date, number, place, person, cause, or detail unless the evidence explicitly supports it.
-6. If the evidence contains different accounts or conflicting dates/numbers, state that the available sources differ and summarize only the alternatives actually present.
-7. If the evidence does not actually answer the question, respond exactly with:
-   ?? ??? ?? ??????? ??????? ?????? ?????? ??????? ?? ??? ??????.
-8. Do not provide personal religious rulings or fatwas.
-9. Do not list sources in the answer; the application displays them separately.
-10. Start directly with the answer. Do not say "according to the context" or describe your reasoning.
-""".strip()
-
-    user_prompt = f"""QUESTION:
-{question}
-
-TRUSTED EVIDENCE:
-{context}
-
-Write only the grounded Arabic answer.
-""".strip()
-
-    response = client.chat.completions.create(
-        model=MODEL_NAME,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-        temperature=0,
-        max_tokens=140,
-    )
-
-    answer = response.choices[0].message.content
-
-    return _clean_answer(answer)
+    """Older interface: the answer text only."""
+    return compose_answer(question, sources).text
