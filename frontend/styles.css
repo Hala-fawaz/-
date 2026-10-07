@@ -1560,7 +1560,7 @@ html.reduce-motion *::after {
   padding: 75px 0 115px;
   background:
     linear-gradient(110deg, #102945ee, #1029459c),
-    url("assets/kaaba-station.jpg") center 42% / cover;
+    url("assets/stations/kaaba.jpg") center 42% / cover;
   color: white;
 }
 .station-hero-inner {
@@ -2373,3 +2373,4 @@ body.dark-theme .tech-note {
 }
 .hero-inner,
 .hero-art { z-index: 2; }
+.event-meta-decoy { display: none !important; }
