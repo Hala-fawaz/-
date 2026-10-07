@@ -61,8 +61,24 @@
             وموثوق.
           </p>
          
+          <section class="guide-search" aria-labelledby="guide-search-title">
+            <h2 id="guide-search-title" class="guide-search-title"><span class="guide-search-spark" aria-hidden="true">✦</span>اسأل المرشد المتخصص</h2>
+            <p class="guide-search-tagline">خلاصة أكثر من 160 كتابًا في السيرة بين يديك. اسأل عن أي حدث أو شخصية، وخذ الجواب موثّقًا بمصدره.</p>
+            <form id="guide-form" class="guide-search-form" role="search">
+              <input id="guide-question" type="text" enterkeyhint="search" autocomplete="off"
+                placeholder="اكتب سؤالك… مثل: ماذا حدث في غزوة بدر؟" aria-label="اكتب سؤالك للمرشد" />
+              <button class="guide-search-btn" type="submit" aria-label="اسأل المرشد"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.6-4.6"/></svg></button>
+            </form>
+            <div class="suggested-questions" data-ask-on-click>
+              <button type="button" data-question="ماذا حدث في غزوة بدر؟">ماذا حدث في غزوة بدر؟</button>
+              <button type="button" data-question="متى كانت الهجرة إلى المدينة؟">متى كانت الهجرة؟</button>
+              <button type="button" data-question="من هي خديجة بنت خويلد؟">من هي خديجة؟</button>
+            </div>
+            <div id="guide-answer" class="answer-box guide-search-answer" role="status" aria-live="polite"></div>
+          </section>
+
           <div class="hero-foot">
-          <a class="btn btn-gold" href="explore.html">ابدأ الرحلة <span>←</span></a>
+          <a class="btn btn-gold btn-journey" href="explore.html">ابدأ الرحلة <span>←</span></a>
           <span class="hero-caption"
               >محطات، خريطة تفاعلية، ومصادر موثوقة</span
             >

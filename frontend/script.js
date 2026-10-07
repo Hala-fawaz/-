@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(data => { const available=data.data?.languages||[]; if(available.length){languages=available.map(item=>[item.language,item.name||item.language]);langMap=Object.fromEntries(languages);renderLanguages();} })
     .catch(error => console.warn('Could not fetch supported language list', error));
   const english = {
+    'اسأل المرشد المتخصص':'Ask the expert guide','خلاصة أكثر من 160 كتابًا في السيرة بين يديك. اسأل عن أي حدث أو شخصية، وخذ الجواب موثّقًا بمصدره.':'The essence of more than 160 books on the Prophet’s biography at your fingertips. Ask about any event or person and get an answer backed by its source.','اكتب سؤالك… مثل: ماذا حدث في غزوة بدر؟':'Type your question… e.g. What happened at the Battle of Badr?','اكتب سؤالك للمرشد':'Type your question for the guide','اسأل المرشد':'Ask the guide','ماذا حدث في غزوة بدر؟':'What happened at Badr?','متى كانت الهجرة؟':'When was the Hijrah?','من هي خديجة؟':'Who was Khadijah?',
     'الرئيسية':'Home','عن المشروع':'About the project','الرحلة والخريطة':'Journey & Map','المصادر':'Sources','نبذة عنا':'About us','تسجيل الدخول':'Sign in','إنشاء حساب':'Create account','حسابي':'My account','الإعدادات':'Settings','دخول':'Sign in',
     'منصة معرفية تفاعلية':'An interactive knowledge platform','رحلة في سيرة النبي ﷺ':'A Journey Through the Prophet’s Biography','اكتشف محطات الرحلة وتعرّف على الأحداث التاريخية بأسلوب تفاعلي وموثوق.':'Explore key moments and historical events through an interactive, trusted experience.','ابحث عن محطة أو موضوع...':'Search for a stop or topic...','ابدأ الرحلة':'Begin the journey','محطات، خريطة تفاعلية، ومصادر موثوقة':'Stops, an interactive map, and trusted sources','محطات الرحلة':'Journey stops','اختر محطة وابدأ الاستكشاف':'Choose a stop to explore','تعرّف على الأحداث والمواقع المرتبطة بالسيرة، وانتقل من المحطة إلى مصادرها.':'Discover events and places from the biography, then explore their sources.','بداية الرسالة':'The beginning of the message','مكة المكرمة':'Makkah','الهجرة':'The Hijrah','إلى المدينة':'To Madinah','بدر':'Badr','غزوة بدر':'The Battle of Badr','فتح مكة':'The Conquest of Makkah','المدينة':'Madinah','بناء المجتمع':'Building a community','ما لقينا محطة بهذا الاسم. جربي كلمة ثانية.':'No stops found. Try another search.','الخريطة التفاعلية':'Interactive map','شاهد المحطات على الخريطة':'See the journey on the map','تنقّل بين مكة والمدينة وبدر وغيرها، واطّلع على النبذة النصية أو استمع إليها.':'Explore Makkah, Madinah, Badr, and more. Read or listen to each summary.','استكشف الخريطة':'Explore the map','عرض توضيحي':'Preview','رحلة عبر المكان والزمن':'A journey through place and time','افتح الخريطة لاختيار الأحداث والفترة الزمنية':'Open the map to choose events and a time period','محطات مقترحة للاستكشاف':'suggested stops to explore','هدف دقة إسناد للاختبار':'target source attribution accuracy','لغة مستهدفة':'target languages',
     'خريطة الرحلة':'Journey map','استكشف محطات السيرة النبوية على خريطة تضاريس ثلاثية الأبعاد. اختر حدثًا لقراءة نبذته أو الاستماع إليها.':'Explore journey stops on a 3D terrain map. Choose an event to read or hear its summary.','الكل':'All','الرحلات والهجرات':'Journeys & migrations','الأحداث المهمة':'Key events','الفترة الزمنية':'Time period','كل الفترات':'All periods','عرض مسطح':'Flat view','تضاريس':'Terrain','شبه الجزيرة العربية':'Arabian Peninsula','خريطة تفاعلية':'Interactive map','أهم الأحداث':'Key events','محطات':'stops','استمع للنبذة':'Listen to summary','صفحة المحطة':'Stop details','رحلة مختصرة':'Journey at a glance','عن مشروع رِسالة':'About Risaala','أهداف المشروع':'Project goals','معرفة يسهل استكشافها':'Knowledge made easy to explore','كيف تعمل الرحلة؟':'How does the journey work?','التقنيات المقترحة':'Proposed technologies','المشكلة والحل':'Challenge & solution','الجمهور المستهدف':'Who it is for','نبذة تاريخية':'Historical overview','الأحداث المرتبطة':'Related events','الأماكن المهمة':'Important places','اسأل عن هذه المحطة':'Ask about this stop','اكتب سؤالك هنا...':'Type your question...','إرسال':'Send','العودة إلى الخريطة':'Back to map','الفترة الزمنية':'Time period','الموقع':'Location','نوع المحطة':'Stop type','مكان':'Place','الكعبة المشرفة':'The Kaaba','المسجد الحرام':'The Grand Mosque','عرض المحطة على الخريطة':'Show on map','مرشدك في الرحلة':'Your journey guide','هذه المراجع واردة في نموذج المصادر. .':'These references are listed on the sources page.','عرض صفحة المصادر':'View sources','معاينة':'Preview','إعدادات اللغة والمظهر والصوت':'Language, appearance, and audio settings','اختر اللغة':'Choose language','حفظ التغييرات':'Save changes','الدخول إلى حسابك':'Sign in to your account','أدخل بريدك الإلكتروني أو رقم جوالك.':'Enter your email or mobile number.','البريد الإلكتروني أو رقم الجوال':'Email address or mobile number','كلمة المرور':'Password','الدخول عبر نفاذ':'Sign in with Nafath','قريبًا':'Coming soon','الاسم':'Name','الاسم الكامل':'Full name'
@@ -325,15 +326,18 @@ attachSpeechToggle('#speak-event', () =>
 
 
     
-  $$('.suggested-questions [data-question]').forEach(button=>button.addEventListener('click',()=>{const input=$('#guide-question');if(input)input.value=button.dataset.question;}));
+  $$('.suggested-questions [data-question]').forEach(button=>button.addEventListener('click',()=>{const input=$('#guide-question');if(input)input.value=button.dataset.question;if(button.closest('[data-ask-on-click]'))$('#guide-form')?.requestSubmit();}));
   $('#guide-form')?.addEventListener('submit', async e => {
     e.preventDefault();
+    const form = e.currentTarget;
 
     const input = $('#guide-question');
     const box = $('#guide-answer');
     const question = input?.value.trim();
 
-    if (!box || !question) return;
+    if (!box || !question || form.classList.contains('is-loading')) return;
+    form.classList.add('is-loading');
+    form.setAttribute('aria-busy', 'true');
 
     const apiBase = window.RISAALA_CONFIG?.apiBaseUrl || 'http://127.0.0.1:8000';
     const lang = chosen();
@@ -495,6 +499,9 @@ attachSpeechToggle('#speak-event', () =>
       }
 
       box.textContent = errorText;
+    } finally {
+      form.classList.remove('is-loading');
+      form.removeAttribute('aria-busy');
     }
   });
 
