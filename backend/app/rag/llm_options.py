@@ -5,12 +5,23 @@ allam-2-7b has a 4,096-token context window, while openai/gpt-oss-120b,
 openai/gpt-oss-20b and the Llama/Qwen models have about 131k tokens.
 """
 
+import os
 from dataclasses import dataclass
 
 
 # Extra completion tokens reserved for GPT-OSS reasoning, which is
 # produced before (and counted with) the visible answer.
-REASONING_TOKENS = 1024
+REASONING_TOKENS = {"low": 1024, "medium": 2048, "high": 4096}
+
+
+def reasoning_effort() -> str:
+    """GROQ_REASONING_EFFORT: low (default, fastest), medium or high.
+
+    Higher effort reads the passages more carefully but is slower and
+    uses more of the Groq token allowance.
+    """
+    value = os.getenv("GROQ_REASONING_EFFORT", "low").strip().lower()
+    return value if value in REASONING_TOKENS else "low"
 
 SMALL_CONTEXT_MODELS = {
     "allam-2-7b": 4096,
@@ -42,10 +53,11 @@ def model_profile(model_name: str) -> ModelProfile:
 def llm_options(model_name: str, answer_tokens: int) -> dict:
     """Keyword arguments for client.chat.completions.create()."""
     if model_name.startswith("openai/gpt-oss"):
+        effort = reasoning_effort()
         return {
-            "max_tokens": answer_tokens + REASONING_TOKENS,
+            "max_tokens": answer_tokens + REASONING_TOKENS[effort],
             "extra_body": {
-                "reasoning_effort": "low",
+                "reasoning_effort": effort,
                 "include_reasoning": False,
             },
         }

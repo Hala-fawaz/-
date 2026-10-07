@@ -5,7 +5,7 @@
     rank_passages     -> score them; stop here if nothing is relevant
     select_evidence   -> a diverse handful that fits the model's budget
     compose_answer    -> the narrator writes, citing passages as [n]
-    (verify)          -> optional second check, RAG_VERIFY_ANSWERS=1
+    verify            -> second check by the same model (RAG_VERIFY_ANSWERS)
 
 The Quran and hadith lookups (QuranEnc, Dorar, HadeethEnc) stay in
 routes/guide.py and run before this.
@@ -14,7 +14,7 @@ routes/guide.py and run before this.
 import re
 import sys
 
-from .answer_verifier import verification_enabled, verify_generated_answer
+from .answer_verifier import should_verify, verify_generated_answer
 from .arabic_text import normalize, tokenize
 from .fts_builder import ensure_index_async, index_is_ready
 from . import fts_retriever
@@ -126,8 +126,8 @@ def answer_question(question: str, station: str | None = None, debug: bool = Fal
         return response
 
     answer = composed.text
-    if verification_enabled():
-        answer = verify_generated_answer(question, answer, evidence)
+    if should_verify(composed.model):
+        answer = verify_generated_answer(question, answer, evidence, model=composed.model)
         if answer == INSUFFICIENT_ANSWER:
             return response
 

@@ -102,7 +102,7 @@ WORD_FAMILIES = {
 ANSWER_TYPES = {
     "when": _normalized_set("متى متي"),
     "how_many": _normalized_set("كم"),
-    "where": _normalized_set("أين اين وين فين"),
+    "where": _normalized_set("أين اين وين فين أماكن الأماكن مكان المكان موقع الموقع مواضع المواضع"),
 }
 
 # Kunya words: the books write «أبو بكر»، «أبي بكر» or «أبا بكر».

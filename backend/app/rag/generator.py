@@ -27,22 +27,23 @@ SYSTEM_PROMPT = """أنت «راوي رِسالة»، المرشد المعرف�
 
 قواعد لا تخالفها:
 1. مصدرك الوحيد هو المقاطع المرقمة في رسالة الزائر. لا تضف اسمًا أو تاريخًا أو عددًا أو حدثًا ليس فيها، حتى لو كنت تعرفه.
-2. ضع بعد كل جملة فيها معلومة رقم المقطع الذي أخذتها منه بين معقوفين، مثل [2] أو [1][3].
-3. لا تكتب نص آية أو حديث من حفظك. إن احتجت إلى آية أو حديث فانقله بلفظه من المقاطع بين علامتي « »، وإلا فاذكر معناه دون علامات تنصيص.
-4. إذا اختلفت المقاطع في رواية أو تاريخ أو عدد فاذكر الأقوال كما وردت، ولا ترجّح من عندك.
-5. افصل بين الرواية والتأمل: العبرة أو الدرس جملة قصيرة في آخر الإجابة، مبنية على ما في المقاطع.
-6. إذا لم تجب المقاطع عن السؤال فاكتب هذه الجملة وحدها: لم أجد في المصادر المتاحة دليلًا كافيًا للإجابة عن هذا السؤال.
-7. لا تُفتِ ولا تُصدر أحكامًا شرعية، وإن سُئلت عن حكم فوجّه السائل إلى أهل العلم.
-8. اكتب نصًا عاديًا بلا تنسيق Markdown (لا نجوم ولا عناوين)، وافصل الفقرات بسطر فارغ.
-9. لا تذكر أرقام الصفحات، ولا تقل «حسب المقاطع» أو «بناءً على النصوص»؛ ابدأ بالجواب مباشرة."""
+2. لا تنسب إلى شخص أو مكان دورًا أو صفة أو حدثًا إلا إذا نصّت عليه المقاطع. ورود الاسم في مقطع لا يكفي لتستنتج ما فعله صاحبه أو ما جرى في المكان.
+3. إذا أجابت المقاطع عن جزء من السؤال فقط فأجب بهذا الجزء، ولا تكمل الباقي بتخمين.
+4. ضع بعد كل جملة فيها معلومة رقم المقطع الذي أخذتها منه بين معقوفين، مثل [2] أو [1][3].
+5. لا تكتب نص آية أو حديث من حفظك. إن احتجت إلى آية أو حديث فانقله بلفظه من المقاطع بين علامتي « »، وإلا فاذكر معناه دون علامات تنصيص.
+6. إذا اختلفت المقاطع في رواية أو تاريخ أو عدد فاذكر الأقوال كما وردت، ولا ترجّح من عندك.
+7. إذا لم تجب المقاطع عن السؤال فاكتب هذه الجملة وحدها: لم أجد في المصادر المتاحة دليلًا كافيًا للإجابة عن هذا السؤال.
+8. لا تُفتِ ولا تُصدر أحكامًا شرعية، وإن سُئلت عن حكم فوجّه السائل إلى أهل العلم.
+9. اكتب بعربية فصيحة سليمة الإملاء، نصًا عاديًا بلا تنسيق Markdown (لا نجوم ولا عناوين)، وافصل الفقرات بسطر فارغ.
+10. لا تذكر أرقام الصفحات، ولا تقل «حسب المقاطع» أو «بناءً على النصوص»؛ ابدأ بالجواب مباشرة."""
 
 MODE_HINTS = {
-    "brief": "إجابة مباشرة موجزة في جملة إلى ثلاث جمل، تبدأ بالمعلومة المسؤول عنها.",
+    "brief": "إجابة مباشرة موجزة في جملة إلى ثلاث جمل، تبدأ بالمعلومة المسؤول عنها، بلا مقدمة ولا عبرة.",
     "narrative": (
         "سرد قصصي مترابط في فقرتين إلى أربع فقرات قصيرة: السياق أولًا، ثم الأحداث بترتيبها، "
-        "ثم عبرة موجزة إن دلّت عليها المقاطع."
+        "ثم جملة أخيرة قصيرة بالعبرة إن دلّت عليها المقاطع."
     ),
-    "general": "إجابة واضحة في فقرة أو فقرتين.",
+    "general": "إجابة واضحة في فقرة أو فقرتين، بلا عبرة أو موعظة في آخرها.",
 }
 
 _CITATION_RE = re.compile(r"\s*\[(\d{1,2}(?:\s*[,،و]\s*\d{1,2})*)\]")
@@ -140,27 +141,32 @@ def finalize_answer(raw: str, evidence: list[dict], finish_reason: str | None = 
     paragraphs = []
 
     for paragraph in re.split(r"\n\s*\n", text):
-        kept = []
-        for sentence in _SENTENCE_RE.split(paragraph.strip()):
-            sentence = sentence.strip()
-            if not sentence:
-                continue
-            # The abstention sentence appended after a real answer.
-            if normalize(sentence).startswith(ABSTAIN_START):
-                continue
-            if not _quotes_are_grounded(sentence, evidence_text):
-                continue
-            for group in _CITATION_RE.findall(sentence):
-                for number in re.findall(r"\d+", group):
-                    number = int(number)
-                    if 1 <= number <= len(evidence) and number not in cited:
-                        cited.append(number)
-            clean = _CITATION_RE.sub("", sentence)
-            clean = re.sub(r"\s+([.،,!?؟:؛])", r"\1", clean).strip()
-            if clean:
-                kept.append(clean)
-        if kept:
-            paragraphs.append(" ".join(kept))
+        lines = []
+        # Lines inside a paragraph (e.g. a list of places) stay on their own line.
+        for line in paragraph.strip().splitlines():
+            kept = []
+            for sentence in _SENTENCE_RE.split(line.strip()):
+                sentence = sentence.strip()
+                if not sentence:
+                    continue
+                # The abstention sentence appended after a real answer.
+                if normalize(sentence).startswith(ABSTAIN_START):
+                    continue
+                if not _quotes_are_grounded(sentence, evidence_text):
+                    continue
+                for group in _CITATION_RE.findall(sentence):
+                    for number in re.findall(r"\d+", group):
+                        number = int(number)
+                        if 1 <= number <= len(evidence) and number not in cited:
+                            cited.append(number)
+                clean = _CITATION_RE.sub("", sentence)
+                clean = re.sub(r"\s+([.،,!?؟:؛])", r"\1", clean).strip()
+                if clean and clean not in ("-", "•"):
+                    kept.append(clean)
+            if kept:
+                lines.append(" ".join(kept))
+        if lines:
+            paragraphs.append("\n".join(lines))
 
     if not paragraphs:
         return ComposedAnswer(INSUFFICIENT_ANSWER, insufficient=True)
@@ -191,7 +197,8 @@ def compose_answer(
         profile = model_profile(model)
         return profile.brief_tokens if mode == "brief" else profile.narrative_tokens
 
-    completion: Completion = complete(messages_for, answer_tokens=answer_tokens, temperature=0.2)
+    # Temperature 0: the same passages give the same, most careful wording.
+    completion: Completion = complete(messages_for, answer_tokens=answer_tokens, temperature=0.0)
     result = finalize_answer(completion.text, used[completion.model], completion.finish_reason)
     result.model = completion.model
     return result

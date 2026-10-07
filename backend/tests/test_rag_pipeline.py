@@ -68,6 +68,8 @@ class PipelineTests(unittest.TestCase):
         self.assertTrue(result["sources"])
         self.assertTrue(all("/" not in s["source"] for s in result["sources"]))
         self.assertEqual(result["debug"]["model"], "openai/gpt-oss-120b")
+        self.assertEqual(fake.calls[0]["temperature"], 0.0)
+        self.assertEqual(fake.calls[0]["extra_body"]["reasoning_effort"], "low")
 
     def test_vocalized_text_is_searchable(self):
         result, fake = self.ask("متى كانت وقعة بدر؟", {"*": "كانت يوم الجمعة السابع عشر من رمضان [1]."})
@@ -118,6 +120,32 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(len(fake.calls), 2)
         self.assertEqual(result["answer"], "خرج النبي ﷺ لاعتراض العير. ونصر الله المؤمنين.")
 
+    def test_auto_verification_with_a_large_model(self):
+        os.environ["RAG_VERIFY_ANSWERS"] = "auto"
+        answer = "خرج النبي ﷺ لاعتراض العير [1].\nوكان العريش مكان انطلاق الجيش [2]."
+        result, fake = self.ask("ماذا حدث في غزوة بدر؟", {
+            "openai/gpt-oss-120b": [answer, "ACCEPT: 1"],
+        })
+        self.assertEqual([call["model"] for call in fake.calls], ["openai/gpt-oss-120b"] * 2)
+        self.assertIn("A name appearing in a\npassage", fake.calls[1]["messages"][0]["content"])
+        self.assertEqual(result["answer"], "خرج النبي ﷺ لاعتراض العير.")
+
+    def test_auto_verification_skips_the_small_model(self):
+        os.environ["RAG_VERIFY_ANSWERS"] = "auto"
+        os.environ["GROQ_MODEL"] = "allam-2-7b"
+        os.environ["GROQ_FALLBACK_MODEL"] = "none"
+        _, fake = self.ask("ماذا حدث في غزوة بدر؟", {"allam-2-7b": "نصر الله المؤمنين [1]."})
+        self.assertEqual(len(fake.calls), 1)
+
+    def test_reasoning_effort_setting(self):
+        os.environ["GROQ_REASONING_EFFORT"] = "medium"
+        try:
+            _, fake = self.ask("ماذا حدث في غزوة بدر؟", {"*": "نصر الله المؤمنين [1]."})
+        finally:
+            os.environ.pop("GROQ_REASONING_EFFORT", None)
+        self.assertEqual(fake.calls[0]["extra_body"]["reasoning_effort"], "medium")
+        self.assertEqual(fake.calls[0]["max_tokens"], 1100 + 2048)
+
     def test_greeting(self):
         result, fake = self.ask("السلام عليكم", {"*": "x"})
         self.assertIn("راوي رِسالة", result["answer"])
@@ -159,6 +187,11 @@ class FinalizeTests(unittest.TestCase):
         raw = "انتصر المسلمون [1]. وقال تعالى: «وَلَقَدْ نَصَرَكُمُ اللَّهُ بِبَدْرٍ وَأَنْتُمْ أَذِلَّةٌ» [1]."
         result = finalize_answer(raw, self.evidence)
         self.assertEqual(result.text, "انتصر المسلمون.")
+
+    def test_list_lines_are_kept(self):
+        raw = "من الأماكن:\n- بئر بدر [1].\n- العدوة الدنيا [1].\n\nوهذا ما ورد."
+        result = finalize_answer(raw, self.evidence)
+        self.assertEqual(result.text, "من الأماكن:\n- بئر بدر.\n- العدوة الدنيا.\n\nوهذا ما ورد.")
 
     def test_markdown_and_cut_off_sentence(self):
         raw = "**غزوة بدر**: كانت في رمضان [1]. ثم بدأت المعركة وكان"

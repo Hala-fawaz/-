@@ -67,6 +67,7 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(plan_query("متى كانت غزوة بدر؟").answer_type, "when")
         self.assertEqual(plan_query("كم عدد المسلمين في بدر؟").answer_type, "how_many")
         self.assertEqual(plan_query("متى كانت غزوة بدر؟").mode, "brief")
+        self.assertEqual(plan_query("ما الأماكن المهمة في المحطة؟", station="غزوة بدر").answer_type, "where")
 
     def test_word_families(self):
         alternatives = plan_query("متى ولد النبي؟").hard[0].alternatives
