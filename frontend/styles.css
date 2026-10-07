@@ -2474,3 +2474,48 @@ body.dark-theme .tech-note {
   .guide-search-spark,
   .guide-search-form.is-loading .guide-search-btn svg { animation: none; }
 }
+
+/* Guide search, round 2: gold arrow button, finger-sized; softer, smaller question text */
+.guide-search .guide-search-form .guide-search-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e3c77f, #c29824);
+  color: #102945;
+  box-shadow: 0 6px 18px rgba(194, 152, 36, 0.35);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.guide-search .guide-search-form .guide-search-btn:hover,
+.guide-search .guide-search-form .guide-search-btn:focus-visible {
+  background: linear-gradient(135deg, #f0d793, #d4af37);
+  outline: none;
+}
+.guide-search .guide-search-form .guide-search-btn:active { transform: scale(0.94); }
+.guide-search .guide-search-form input {
+  font-size: 15px;
+  font-weight: 400;
+  color: #e8edf2;
+  letter-spacing: 0;
+}
+.guide-search .guide-search-form input::placeholder {
+  color: #8fa1b2;
+  font-size: 14px;
+  font-weight: 300;
+}
+.guide-search-answer {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(227, 199, 127, 0.45) transparent;
+}
+.guide-search-answer::-webkit-scrollbar { width: 6px; }
+.guide-search-answer::-webkit-scrollbar-thumb { background: rgba(227, 199, 127, 0.45); border-radius: 6px; }
+.guide-search-answer::-webkit-scrollbar-track { background: transparent; }
+
+/* Order: journey button first, then the guide; the journey text is the larger one. */
+.hero-foot + .guide-search { margin-top: 30px; }
+.hero-foot .btn-journey { font-size: 22px; padding: 17px 42px; }
+.guide-search-title { font-size: 18px; }
+@media (max-width: 680px) {
+  .hero-foot .btn-journey { font-size: 20px; }
+  .guide-search-title { font-size: 17px; }
+}
