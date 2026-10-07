@@ -593,6 +593,10 @@ input {
 .answer-box.show {
   display: block;
 }
+/* Guide answers can have several paragraphs separated by blank lines. */
+.answer-box p {
+  white-space: pre-line;
+}
 @media (max-width: 900px) {
   .nav-links {
     gap: 13px;
@@ -2374,3 +2378,99 @@ body.dark-theme .tech-note {
 .hero-inner,
 .hero-art { z-index: 2; }
 .event-meta-decoy { display: none !important; }
+
+/* Home hero: «اسأل المرشد المتخصص» search, placed above the journey button */
+.guide-search {
+  margin-top: 26px;
+  max-width: 620px;
+  padding: 18px 20px 16px;
+  border: 1px solid rgba(227, 199, 127, 0.35);
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03));
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+.guide-search-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font: 600 21px/1.4 "Readex Pro", sans-serif;
+  color: #fff;
+}
+.guide-search-spark {
+  color: #e3c77f;
+  animation: guide-twinkle 2.4s ease-in-out infinite;
+}
+@keyframes guide-twinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.8); }
+}
+.guide-search-tagline {
+  margin: 4px 0 14px;
+  color: #c9d4dd;
+  font-size: 15px;
+}
+.guide-search-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid #ffffff2e;
+  border-radius: 14px;
+  background: #0a1b2dcc;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.guide-search-form:focus-within {
+  border-color: #e3c77f;
+  box-shadow: 0 0 0 3px rgba(227, 199, 127, 0.18);
+}
+.guide-search-form input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #fff;
+  padding: 8px 10px;
+}
+.guide-search-form input::placeholder { color: #9fb0bf; }
+.guide-search-btn {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: var(--gold);
+  color: #182f45;
+  cursor: pointer;
+  transition: transform 0.2s, filter 0.2s;
+}
+.guide-search-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+.guide-search-form.is-loading .guide-search-btn svg { animation: guide-spin 0.9s linear infinite; }
+@keyframes guide-spin { to { transform: rotate(360deg); } }
+.guide-search .suggested-questions { margin-top: 10px; }
+.guide-search-answer {
+  max-height: 340px;
+  overflow-y: auto;
+  background: #0a1b2d99;
+  line-height: 1.85;
+}
+.guide-search-answer ul { margin: 6px 0 0; padding-inline-start: 18px; font-size: 13px; color: #b9c6d1; }
+/* The journey stays the main call to action: bigger than the guide button. */
+.hero-foot .btn-journey {
+  padding: 16px 38px;
+  font-size: 19px;
+  box-shadow: 0 10px 30px rgba(194, 152, 36, 0.35);
+}
+@media (max-width: 680px) {
+  .guide-search { padding: 15px 14px 13px; }
+  .guide-search-title { font-size: 19px; }
+  .hero-foot .btn-journey { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guide-search-spark,
+  .guide-search-form.is-loading .guide-search-btn svg { animation: none; }
+}

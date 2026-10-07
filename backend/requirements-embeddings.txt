@@ -1,0 +1,10 @@
+# Optional extras for the experimental embeddings/FAISS scripts
+# (app/rag/index_builder.py, embedding_preranker.py, pdf_loader.py).
+# The guide endpoint (/api/guide) does NOT need these; keeping them out
+# of requirements.txt keeps the Render build small (torch alone is
+# several hundred MB).
+-r requirements.txt
+sentence-transformers<6
+faiss-cpu
+numpy
+pymupdf
